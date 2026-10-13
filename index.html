@@ -1,0 +1,1484 @@
+<title>Splitlab Experiment Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: fixed left rail of sections + one working column; collapses to a top bar under 860px */
+:root{
+  --bg:#f8fafb; --surface:#ffffff; --surface-2:#f0f3f6; --ink:#1c2430; --ink-2:#4d5967; --muted:#7a8594; --line:#e3e8ed;
+  --accent:#14867a; --accent-ink:#ffffff; --accent-soft:#e3f4f1;
+  --ctrl:#7a8594; --trt:#14867a; color-scheme:light;
+  --good:#1d7a3e; --good-soft:#dff2e5; --bad:#b4271b; --bad-soft:#fbe4e1; --flat:#8f6400; --flat-soft:#f8eccc; --info:#2453c4; --info-soft:#e2e9fb;
+  --pin:#d9480f;
+  --shadow:0 1px 2px rgba(20,26,33,.06),0 4px 16px rgba(20,26,33,.06);
+  --f-display:"Schibsted Grotesk","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+h1,h2,h3,h4{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:26px;font-weight:700}
+h2{font-size:18px;font-weight:700}
+h3{font-size:15px;font-weight:600}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:12.5px}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.ink2{color:var(--ink-2)}
+.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+
+/* shell */
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100%}
+.rail{background:var(--surface);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:0 6px}
+.brand svg{flex:none}
+.brand b{font-family:var(--f-display);font-size:18px;font-weight:800;letter-spacing:-.02em}
+.brand small{display:block;font-size:11px;color:var(--muted);font-weight:500;margin-top:-2px}
+.navlinks{display:flex;flex-direction:column;gap:2px}
+.navlinks a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--ink-2);text-decoration:none;font-weight:500}
+.navlinks a:hover{background:var(--surface-2);color:var(--ink)}
+.navlinks a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.navlinks svg{width:16px;height:16px;flex:none}
+.rail-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;font-size:12px}
+.conn{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex:none}
+.dot.on{background:var(--good)}
+.dot.live{background:var(--info);box-shadow:0 0 0 0 var(--info);animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--info) 60%,transparent)}70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.dot.live{animation:none}*{transition:none!important}}
+main{padding-block:28px 64px;padding-inline:32px;min-width:0;max-width:1240px;width:100%}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .rail{position:sticky;top:env(safe-area-inset-top,0px);height:auto;flex-direction:row;align-items:center;padding:10px 16px;gap:10px;z-index:20;border-right:0;border-bottom:1px solid var(--line);overflow-x:auto}
+  .brand small,.rail-foot{display:none}
+  .navlinks{flex-direction:row}
+  .navlinks a span{display:none}
+  .navlinks a{padding:8px}
+  main{padding-inline:16px;padding-block:20px 48px}
+}
+
+/* generic */
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;min-width:0}
+.card.flush{padding:0;overflow:hidden}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);padding:7px 12px;border-radius:8px;cursor:pointer;font-weight:500;white-space:nowrap;text-decoration:none;color:var(--ink)}
+.btn:hover{background:var(--surface-2)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn svg{width:15px;height:15px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.st-running{background:var(--info-soft);color:var(--info)}
+.st-completed{background:var(--surface-2);color:var(--ink-2)}
+.st-terminated{background:var(--bad-soft);color:var(--bad)}
+.st-scheduled{background:var(--flat-soft);color:var(--flat)}
+.st-draft{background:transparent;color:var(--muted);border-color:var(--line)}
+.v-success{background:var(--good-soft);color:var(--good)}
+.v-failure{background:var(--bad-soft);color:var(--bad)}
+.v-flat{background:var(--flat-soft);color:var(--flat)}
+.v-pending{background:transparent;color:var(--muted);border-color:var(--line)}
+.v-trend{background:var(--info-soft);color:var(--info)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:6px;background:var(--surface-2);font-size:12.5px;color:var(--ink-2)}
+.chip button{border:0;background:none;padding:0;cursor:pointer;color:var(--muted);line-height:1}
+.tag-src{font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px;border:1px solid var(--line);color:var(--muted)}
+.tag-src.adobe{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 35%,var(--line))}
+.tag-src.custom{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 35%,var(--line))}
+label.f{display:flex;flex-direction:column;gap:6px;font-weight:500;font-size:13px;min-width:0}
+label.f .hint{font-weight:400;color:var(--muted);font-size:12px}
+input[type=text],input[type=number],input[type=date],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:72px}
+input:focus,select:focus,textarea:focus{outline:2px solid color-mix(in srgb,var(--accent) 50%,transparent);border-color:var(--accent)}
+.err{color:var(--bad);font-size:12px;font-weight:500}
+.toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:500}
+.toggle input{accent-color:var(--accent);width:16px;height:16px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:6px 12px;cursor:pointer;color:var(--ink-2);font-weight:500;font-size:13px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface)}
+td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--surface-2)}
+tr.sel td{background:var(--accent-soft)}
+.r{text-align:right}
+
+/* dashboard */
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.kpi b{font-family:var(--f-display);font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi span{font-size:12.5px;color:var(--muted)}
+.mix{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:2px;margin-top:8px}
+.mix i{display:block;height:100%}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filters input[type=text]{width:220px}
+.filters select{width:auto}
+.statusbar{display:flex;gap:6px;flex-wrap:wrap}
+.statusbar button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:12.5px;cursor:pointer;color:var(--ink-2);font-weight:500}
+.statusbar button.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.statusbar button b{font-weight:600;margin-left:4px;opacity:.7}
+.exname{font-weight:600;color:var(--ink)}
+.exname small{display:block;font-family:var(--f-mono);font-weight:400;color:var(--muted);font-size:11.5px}
+.liftcell{font-family:var(--f-mono);font-size:12.5px}
+.up{color:var(--good)}.down{color:var(--bad)}
+.gantt{min-width:720px;padding:8px 16px 16px}
+.g-axis{position:relative;height:24px;border-bottom:1px solid var(--line);margin-left:220px}
+.g-axis span{position:absolute;font-size:11px;color:var(--muted);transform:translateX(-50%);top:4px;white-space:nowrap}
+.g-row{display:grid;grid-template-columns:220px 1fr;align-items:center;min-height:34px;border-bottom:1px dashed var(--line);cursor:pointer}
+.g-row:hover{background:var(--surface-2)}
+.g-row .lbl{font-size:12.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px}
+.g-track{position:relative;height:34px}
+.g-bar{position:absolute;top:9px;height:16px;border-radius:4px;font-size:10.5px;padding:0 6px;line-height:16px;white-space:nowrap;overflow:hidden;font-weight:600}
+.g-today{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--pin);z-index:2}
+.g-today b{position:absolute;top:-20px;left:-18px;font-size:10px;color:var(--pin)}
+
+/* detail */
+.crumb{display:inline-flex;align-items:center;gap:6px;color:var(--muted);text-decoration:none;font-weight:500;margin-bottom:12px}
+.crumb:hover{color:var(--ink)}
+.dhead{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:flex-start}
+.dhead .meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--ink-2);font-size:13px;margin-top:8px;align-items:center}
+.hyp{margin-top:12px;max-width:72ch;color:var(--ink-2)}
+.hyp b{color:var(--ink)}
+.prog{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.prog{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.prog .k{font-size:12px;color:var(--muted)}
+.prog .v{font-family:var(--f-display);font-weight:600;font-size:16px;font-variant-numeric:tabular-nums}
+.bar{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.verdict{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;border-radius:12px;padding:22px;border:1px solid var(--line);background:var(--surface)}
+@media (max-width:760px){.verdict{grid-template-columns:1fr}}
+.verdict .big{display:flex;flex-direction:column;gap:6px;border-right:1px solid var(--line);padding-right:20px}
+@media (max-width:760px){.verdict .big{border-right:0;padding-right:0;border-bottom:1px solid var(--line);padding-bottom:16px}}
+.verdict .word{font-family:var(--f-display);font-size:34px;font-weight:800;line-height:1;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.verdict .word svg{width:30px;height:30px}
+.w-success{color:var(--good)}.w-failure{color:var(--bad)}.w-flat{color:var(--flat)}.w-trend{color:var(--info)}.w-pending{color:var(--muted)}
+.checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 20px;margin-top:14px}
+@media (max-width:600px){.checks{grid-template-columns:1fr}}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+.check svg{width:16px;height:16px;flex:none;margin-top:2px}
+.summary p+p{margin-top:8px}
+.summary{max-width:78ch}
+.forest svg{display:block;width:100%;height:22px}
+.sigtag{font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px}
+.role{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.chartbox{position:relative}
+.chartbox svg{display:block;width:100%}
+.tip{position:absolute;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.45;white-space:nowrap;z-index:5;box-shadow:var(--shadow)}
+.tip b{font-weight:600}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.legend i.band{height:10px;opacity:.25;border-radius:2px}
+.screens{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+@media (max-width:760px){.screens{grid-template-columns:1fr}}
+.shotcol{display:flex;flex-direction:column;gap:12px;min-width:0}
+.shotcol h3{display:flex;align-items:center;gap:8px}
+.shotwrap{display:flex;justify-content:center;background:var(--surface-2);border-radius:12px;padding:20px 12px}
+.shot{position:relative;width:260px;max-width:100%}
+.shot.adding{cursor:crosshair}
+.shot img.up{display:block;width:100%;border-radius:18px;border:1px solid var(--line)}
+.pinm{position:absolute;width:24px;height:24px;margin:-12px 0 0 -12px;border-radius:50%;background:var(--pin);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;border:2px solid var(--surface);box-shadow:0 2px 6px rgba(0,0,0,.25);z-index:3;cursor:default}
+.pinm.pending{background:var(--ink);color:var(--surface)}
+.notes{display:flex;flex-direction:column;gap:8px;padding:0;margin:0;list-style:none}
+.notes li{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:start;font-size:13px}
+.notes li .n{width:22px;height:22px;border-radius:50%;background:var(--pin);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center}
+.notes li .who{font-size:11.5px;color:var(--muted)}
+/* mock phone */
+.phone{border:6px solid #d5dce3;border-radius:26px;background:var(--surface);overflow:hidden;font-size:11px;line-height:1.35;color:var(--ink);user-select:none}
+.scr{min-height:430px;display:flex;flex-direction:column;gap:8px;padding:10px 12px 14px}
+.scr .sb{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-weight:600}
+.scr .tb{font-family:var(--f-display);font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+.scr .ph{background:var(--surface-2);border-radius:8px;display:grid;place-items:center;color:var(--muted);font-size:10px;text-align:center;padding:6px}
+.scr .li{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)}
+.scr .mb{border-radius:8px;padding:9px;text-align:center;font-weight:700;font-size:11.5px}
+.scr .mb.p{background:var(--accent);color:var(--accent-ink)}
+.scr .mb.s{background:var(--surface-2);color:var(--ink)}
+.scr .in{border:1px solid var(--line);border-radius:6px;padding:6px 8px;color:var(--muted)}
+.scr .sm{font-size:9.5px;color:var(--muted)}
+.scr .mc{border:1px solid var(--line);border-radius:8px;padding:8px}
+.scr .mchips{display:flex;gap:4px;flex-wrap:wrap}
+.scr .mchips span{background:var(--surface-2);padding:3px 7px;border-radius:999px;font-size:9.5px;font-weight:600}
+.scr .chg{outline:2px dashed var(--pin);outline-offset:3px;border-radius:8px}
+.scr.dark{background:#11161c;color:#e6ebf0}
+.hl-off .scr .chg{outline:none}
+
+/* wizard */
+.wiz{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.wiz{grid-template-columns:1fr}}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;position:sticky;top:20px}
+@media (max-width:860px){.steps{flex-direction:row;overflow-x:auto;position:static}}
+.steps button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:8px 10px;border-radius:8px;cursor:pointer;text-align:left;color:var(--ink-2);font-weight:500;white-space:nowrap}
+.steps button .sn{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;background:var(--surface)}
+.steps button.on{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+.steps button.on .sn{border-color:var(--accent);color:var(--accent)}
+.steps button.done .sn{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.fgrid .full{grid-column:1/-1}
+@media (max-width:640px){.fgrid{grid-template-columns:1fr}}
+.choice{display:flex;flex-wrap:wrap;gap:8px}
+.choice label{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;cursor:pointer;background:var(--surface);font-weight:500}
+.choice label:has(input:checked){border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.choice input{accent-color:var(--accent)}
+.calc{background:var(--surface-2);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.calc{grid-template-columns:1fr}}
+.calc .k{font-size:12px;color:var(--muted)}
+.calc .v{font-family:var(--f-display);font-weight:700;font-size:18px;font-variant-numeric:tabular-nums}
+.note{display:flex;gap:10px;padding:10px 12px;border-radius:8px;font-size:13px;align-items:flex-start}
+.note svg{width:16px;height:16px;flex:none;margin-top:2px}
+.note.warn{background:var(--flat-soft);color:var(--flat)}
+.note.ok{background:var(--good-soft);color:var(--good)}
+.note.info{background:var(--info-soft);color:var(--info)}
+.note.bad{background:var(--bad-soft);color:var(--bad)}
+.vrow{display:grid;grid-template-columns:120px minmax(0,1fr) 90px 32px;gap:10px;align-items:center}
+@media (max-width:640px){.vrow{grid-template-columns:1fr 80px 32px}.vrow .vd{grid-column:1/-1;order:5}}
+.ms-wrap{position:relative}
+.pop{position:absolute;z-index:30;top:calc(100% + 6px);left:0;width:min(440px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);display:flex;flex-direction:column;max-height:440px}
+.pop .ph{padding:10px;border-bottom:1px solid var(--line)}
+.pop .pb{overflow-y:auto;padding:6px 6px 10px}
+.pop .grp{padding:8px 8px 2px;display:flex;justify-content:space-between;align-items:center}
+.pop .opt{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 8px;border-radius:6px;cursor:pointer}
+.pop .opt:hover{background:var(--surface-2)}
+.pop .opt input{accent-color:var(--accent)}
+.pop .opt small{display:block;color:var(--muted);font-family:var(--f-mono);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pop .pf{padding:10px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.selm{display:grid;grid-template-columns:minmax(0,1fr) 150px 32px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.selm:last-child{border-bottom:0}
+.packs{display:flex;gap:8px;flex-wrap:wrap}
+.tokens{display:flex;gap:6px;flex-wrap:wrap}
+.tokens button{font-family:var(--f-mono);font-size:11.5px;border:1px solid var(--line);background:var(--surface-2);border-radius:6px;padding:3px 7px;cursor:pointer}
+.tokens button.op{min-width:28px}
+.review dl{display:grid;grid-template-columns:180px minmax(0,1fr);gap:8px 16px;margin:0}
+.review dt{color:var(--muted)}
+.review dd{margin:0}
+@media (max-width:640px){.review dl{grid-template-columns:1fr}.review dt{margin-top:6px}}
+.upl{border:1.5px dashed var(--line);border-radius:10px;padding:14px;text-align:center;color:var(--muted);font-size:12.5px;cursor:pointer;display:block}
+.upl:hover{border-color:var(--accent);color:var(--accent)}
+.upl input{display:none}
+
+/* modal & toast */
+.modal-bg{position:fixed;inset:0;background:rgba(10,14,18,.5);display:grid;place-items:center;padding:16px;z-index:50}
+.modal{background:var(--surface);border-radius:14px;width:min(620px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.modal pre{white-space:pre-wrap;background:var(--surface-2);padding:12px;border-radius:8px;font-family:var(--f-mono);font-size:12px;max-height:300px;overflow:auto;margin:0}
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:#2b3542;color:#fff;padding:10px 16px;border-radius:10px;font-weight:500;z-index:60;box-shadow:var(--shadow);max-width:calc(100vw - 32px)}
+.spinner{width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.aa-logo{width:28px;height:28px;border-radius:6px;background:#e1251b;color:#fff;display:grid;place-items:center;font-weight:800;font-family:var(--f-display);font-size:13px;flex:none}
+.comment{display:grid;grid-template-columns:32px minmax(0,1fr);gap:10px}
+.av{width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:12px}
+.log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--line);padding-left:14px}
+.log li{font-size:12.5px;position:relative}
+.log li:before{content:"";position:absolute;left:-19px;top:6px;width:8px;height:8px;border-radius:50%;background:var(--surface);border:2px solid var(--muted)}
+.feat{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.feat .card{padding:16px;display:flex;flex-direction:column;gap:6px}
+.feat .where{font-size:12px;color:var(--accent);font-weight:600;text-decoration:none}
+.feat .where:hover{text-decoration:underline}
+.feat .seen{font-size:11.5px;color:var(--muted)}
+</style>
+
+<div class="app">
+  <nav class="rail" aria-label="Main">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><rect width="30" height="30" rx="8" fill="var(--accent)"/><path d="M8 21V9M8 15h7M15 9v12M15 12h7M15 18h7" stroke="var(--accent-ink)" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg>
+      <div><b>Splitlab</b><small>Experiment hub</small></div>
+    </div>
+    <div class="navlinks" id="navlinks">
+      <a href="#dashboard" data-nav="dashboard"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg><span>All experiments</span></a>
+      <a href="#new" data-nav="new"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8" cy="8" r="6"/><path d="M8 5v6M5 8h6"/></svg><span>New experiment</span></a>
+      <a href="#metrics" data-nav="metrics"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 13h12M4 11V7M8 11V3M12 11V8"/></svg><span>Metrics library</span></a>
+      <a href="#guide" data-nav="guide"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 2.5h7l3 3V13.5H3z"/><path d="M5.5 8h5M5.5 10.5h5"/></svg><span>Feature guide</span></a>
+    </div>
+    <div class="rail-foot">
+      <button class="conn" id="aaStatus" type="button" style="cursor:pointer;text-align:left"></button>
+      <span class="muted">Prototype · sample data · today is 8 Oct 2026</span>
+    </div>
+  </nav>
+  <main id="view" tabindex="-1"></main>
+</div>
+<div id="modalRoot"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ---------- utilities ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const TODAY_ISO = '2026-10-08';
+const DAY = 864e5;
+const dt = s => new Date(s + 'T12:00:00Z');
+const isoOf = d => d.toISOString().slice(0, 10);
+const addDays = (s, n) => isoOf(new Date(dt(s).getTime() + n * DAY));
+const daysBetween = (a, b) => Math.round((dt(b) - dt(a)) / DAY);
+const fmtD = s => s ? dt(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' }) : '—';
+const fmtDY = s => s ? dt(s).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '—';
+const fmtN = n => n >= 1e6 ? (n / 1e6).toFixed(n >= 1e7 ? 0 : 1) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(n >= 1e4 ? 0 : 1) + 'k' : String(Math.round(n));
+const fmtInt = n => Math.round(n).toLocaleString('en-US');
+const pct = (x, dp = 1) => (x > 0 ? '+' : x < 0 ? '−' : '') + Math.abs(x * 100).toFixed(dp) + '%';
+const fmtP = p => p < 0.001 ? '< 0.001' : p.toFixed(3);
+function hash(s) { let h = 2166136261; for (const c of String(s)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) { let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss(r) { let u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function Phi(z) { const t = 1 / (1 + 0.2316419 * Math.abs(z)); const d = 0.3989423 * Math.exp(-z * z / 2); const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return z > 0 ? 1 - p : p; }
+const Z = { a: { '0.05': 1.96, '0.1': 1.645, '0.01': 2.576 }, b: { '0.8': 0.842, '0.9': 1.282 } };
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2600); }
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('splitlab.' + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('splitlab.' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable or full; keep in memory */ } }
+};
+const ICON = {
+  check: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8.5l3 3 7-7"/></svg>',
+  x: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
+  warn: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 2l6.5 11.5h-13z"/><path d="M8 6.5v3M8 11.5v.5"/></svg>',
+  info: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="8" r="6"/><path d="M8 7v4M8 5v.5"/></svg>',
+  flat: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10"/></svg>',
+  up: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l4-4 3 3 4-5"/></svg>',
+  down: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5l4 4 3-3 4 5"/></svg>',
+  dl: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 2v8M4.5 6.5L8 10l3.5-3.5M2.5 13.5h11"/></svg>',
+  copy: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 009.5 2h-6A1.5 1.5 0 002 3.5v6A1.5 1.5 0 003.5 11H5"/></svg>',
+  back: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" width="14" height="14"><path d="M10 3L5 8l5 5"/></svg>',
+  plus: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3v10M3 8h10"/></svg>',
+  pin: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 14s-4.5-4.2-4.5-7.5a4.5 4.5 0 019 0C12.5 9.8 8 14 8 14z"/><circle cx="8" cy="6.5" r="1.5"/></svg>'
+};
+
+/* ---------- reference data ---------- */
+const CATS = ['Business', 'Customer', 'Engagement', 'Performance'];
+const CAT_HINT = { Business: 'Revenue, conversion and orders', Customer: 'Satisfaction, retention and support load', Engagement: 'How people use the product', Performance: 'Speed, stability and errors. Good guardrails.' };
+const SEED_METRICS = [
+  { id: 'conv', name: 'Checkout conversion', cat: 'Business', type: 'rate', unit: '%', dir: 1, base: 0.042, formula: 'order_completed / checkout_start', src: 'native' },
+  { id: 'rpu', name: 'Revenue per user', cat: 'Business', type: 'mean', unit: '$', dir: 1, base: 3.85, sd: 18, formula: 'sum(revenue) / unique_users', src: 'native' },
+  { id: 'aov', name: 'Average order value', cat: 'Business', type: 'mean', unit: '$', dir: 1, base: 64, sd: 38, formula: 'sum(revenue) / count(order_completed)', src: 'native' },
+  { id: 'subs', name: 'Subscription start rate', cat: 'Business', type: 'rate', unit: '%', dir: 1, base: 0.018, formula: 'subscription_start / unique_users', src: 'native' },
+  { id: 'ret7', name: 'Day-7 retention', cat: 'Customer', type: 'rate', unit: '%', dir: 1, base: 0.36, formula: 'users_active_day7 / users_new', src: 'native' },
+  { id: 'csat', name: 'CSAT score', cat: 'Customer', type: 'mean', unit: 'score', dir: 1, base: 4.1, sd: 0.9, formula: 'avg(csat_response)', src: 'native' },
+  { id: 'tickets', name: 'Support contact rate', cat: 'Customer', type: 'rate', unit: '%', dir: -1, base: 0.012, formula: 'support_contact / unique_users', src: 'native' },
+  { id: 'unsub', name: 'Notification opt-out rate', cat: 'Customer', type: 'rate', unit: '%', dir: -1, base: 0.008, formula: 'push_opt_out / users_notified', src: 'native' },
+  { id: 'ctr', name: 'Click-through rate', cat: 'Engagement', type: 'rate', unit: '%', dir: 1, base: 0.11, formula: 'module_click / module_view', src: 'native' },
+  { id: 'sess', name: 'Sessions per user', cat: 'Engagement', type: 'mean', unit: 'count', dir: 1, base: 3.2, sd: 2.6, formula: 'count(session_start) / unique_users', src: 'native' },
+  { id: 'search', name: 'Search success rate', cat: 'Engagement', type: 'rate', unit: '%', dir: 1, base: 0.62, formula: 'search_result_click / search', src: 'native' },
+  { id: 'bounce', name: 'Bounce rate', cat: 'Engagement', type: 'rate', unit: '%', dir: -1, base: 0.41, formula: '[Bounces] / [Entries]', src: 'adobe' },
+  { id: 'lat', name: 'Page load time (p75)', cat: 'Performance', type: 'mean', unit: 's', dir: -1, base: 2.4, sd: 0.9, formula: 'p75(page_load_ms) / 1000', src: 'native' },
+  { id: 'crash', name: 'Crash-free sessions', cat: 'Performance', type: 'rate', unit: '%', dir: 1, base: 0.9962, formula: '1 - app_crash / session_start', src: 'native' },
+  { id: 'payerr', name: 'Payment error rate', cat: 'Performance', type: 'rate', unit: '%', dir: -1, base: 0.021, formula: 'payment_failed / payment_attempt', src: 'native' }
+];
+const PACKS = [
+  { name: 'Checkout health', ids: ['conv', 'aov', 'payerr', 'lat'] },
+  { name: 'Growth core', ids: ['ret7', 'sess', 'subs'] },
+  { name: 'Customer care', ids: ['csat', 'tickets', 'unsub'] },
+  { name: 'Standard guardrails', ids: ['lat', 'crash', 'payerr', 'tickets'] }
+];
+const PLATFORMS = [
+  { id: 'ios', name: 'iOS app', dau: 420000 }, { id: 'android', name: 'Android app', dau: 910000 },
+  { id: 'mweb', name: 'Mobile web', dau: 610000 }, { id: 'web', name: 'Desktop web', dau: 300000 }
+];
+const GEOS = [
+  { id: 'IN', name: 'India', share: .38 }, { id: 'US', name: 'United States', share: .19 }, { id: 'GB', name: 'United Kingdom', share: .06 },
+  { id: 'DE', name: 'Germany', share: .05 }, { id: 'FR', name: 'France', share: .04 }, { id: 'BR', name: 'Brazil', share: .07 },
+  { id: 'ID', name: 'Indonesia', share: .06 }, { id: 'SG', name: 'Singapore', share: .02 }, { id: 'AE', name: 'UAE', share: .03 },
+  { id: 'AU', name: 'Australia', share: .03 }, { id: 'CA', name: 'Canada', share: .03 }, { id: 'JP', name: 'Japan', share: .04 }
+];
+const TEAMS = ['Checkout', 'Growth', 'Search', 'Pricing', 'Payments', 'Engagement', 'Customer Care', 'Design Systems'];
+const LAYERS = ['None', 'Checkout surface', 'Home & discovery', 'Pricing & plans', 'Notifications'];
+const EVENTS = ['page_view', 'session_start', 'unique_users', 'module_view', 'module_click', 'search', 'search_result_click', 'add_to_cart', 'checkout_start', 'order_completed', 'revenue', 'payment_attempt', 'payment_failed', 'subscription_start', 'support_contact', 'app_crash', 'push_opt_out'];
+const AA_SUITES = [{ id: 'acme.prod.web', name: 'Production · Web (global)' }, { id: 'acme.prod.app', name: 'Production · Apps (iOS + Android)' }, { id: 'acme.stage', name: 'Staging · All' }];
+const AA_METRICS = [
+  { id: 'aa_orders', name: 'Orders per visit', cat: 'Business', type: 'rate', base: 0.031, formula: '[Orders] / [Visits]', dir: 1 },
+  { id: 'aa_rev', name: 'Revenue per visitor', cat: 'Business', type: 'mean', base: 2.9, sd: 15, formula: '[Revenue] / [Unique Visitors]', dir: 1, unit: '$' },
+  { id: 'aa_cart', name: 'Cart addition rate', cat: 'Business', type: 'rate', base: 0.087, formula: '[Cart Additions] / [Visits]', dir: 1 },
+  { id: 'aa_pv', name: 'Product views per visit', cat: 'Engagement', type: 'mean', base: 2.4, sd: 2.1, formula: '[Product Views] / [Visits]', dir: 1, unit: 'count' },
+  { id: 'aa_exit', name: 'Checkout exit rate', cat: 'Business', type: 'rate', base: 0.48, formula: '[Exits: Checkout] / [Visits: Checkout]', dir: -1 },
+  { id: 'aa_promo', name: 'Promo click rate (event12)', cat: 'Engagement', type: 'rate', base: 0.054, formula: '[event12] / [Page Views]', dir: 1 },
+  { id: 'aa_time', name: 'Time spent per visit', cat: 'Engagement', type: 'mean', base: 212, sd: 260, formula: '[Total Seconds Spent] / [Visits]', dir: 1, unit: 's' }
+];
+
+/* ---------- seed experiments ---------- */
+const N = (name, featureId, team, owner, status, start, end, o) => Object.assign({ name, featureId, team, owner, status, start, end }, o);
+const SEED_EXPS = [
+  N('One-tap checkout', 'feat_checkout_onetap', 'Checkout', 'Priya Raman', 'completed', '2026-08-25', '2026-09-21', {
+    id: 'onetap', platforms: ['ios', 'android'], geos: ['IN', 'US'], users: 412000, traffic: 20, layer: 'Checkout surface', tpl: 'checkout',
+    hypothesis: 'If returning buyers can pay with their saved UPI or card in one tap, checkout conversion will rise, because the address and payment steps cause most drop-off.',
+    variants: [{ name: 'Control', split: 50, desc: 'Three-step checkout' }, { name: 'One-tap', split: 50, desc: 'Single "Pay now" button using saved address and payment' }],
+    metrics: [{ id: 'conv', role: 'primary', eff: .061 }, { id: 'aov', role: 'secondary', eff: -.004 }, { id: 'payerr', role: 'guardrail', eff: 0 }, { id: 'lat', role: 'guardrail', eff: 0 }],
+    cuped: true, notes: { before: [{ x: 88, y: 87, t: 'Returning buyers had to step through address, payment and review.' }], after: [{ x: 90, y: 87, t: 'New: one button pays with the saved method. Address and payment are pre-filled.' }, { x: 12, y: 94, t: 'Small print confirms which saved method will be used.' }] },
+    comments: [{ who: 'Arjun Mehta', when: '2026-09-22', text: 'Great result. Payments team confirmed no change in fraud flags during the test.' }],
+    rollout: 100
+  }),
+  N('Sticky search filters', 'feat_search_sticky_filters', 'Search', 'Daniel Okafor', 'completed', '2026-08-18', '2026-09-08', {
+    id: 'sticky', platforms: ['mweb', 'android'], geos: ['IN', 'BR', 'ID'], users: 238000, traffic: 10, layer: 'Home & discovery', tpl: 'search',
+    hypothesis: 'If filter chips stay pinned while scrolling results, more searches will end in a product click, because people refine instead of abandoning.',
+    variants: [{ name: 'Control', split: 50, desc: 'Filters behind a "Filter" link' }, { name: 'Sticky chips', split: 50, desc: 'Filter chips pinned below the search bar' }],
+    metrics: [{ id: 'search', role: 'primary', eff: .002 }, { id: 'ctr', role: 'secondary', eff: .004 }, { id: 'lat', role: 'guardrail', eff: 0 }],
+    notes: { before: [{ x: 84, y: 25, t: 'Filters were a small text link that few people found.' }], after: [{ x: 50, y: 27, t: 'Chips are always visible and stay pinned when scrolling.' }] },
+    comments: [{ who: 'Mei Lin', when: '2026-09-10', text: 'Flat overall, but Android looked slightly positive. Worth a follow-up with bigger chips?' }]
+  }),
+  N('Annual plan as default', 'feat_pricing_annual_default', 'Pricing', 'Sofia Alvarez', 'completed', '2026-07-28', '2026-09-01', {
+    id: 'annual', platforms: ['web', 'mweb'], geos: ['US', 'GB', 'CA', 'AU'], users: 520000, traffic: 30, layer: 'Pricing & plans', tpl: 'pricing',
+    hypothesis: 'If the pricing page opens on annual billing, more visitors will start a subscription, because the monthly-equivalent price looks lower.',
+    variants: [{ name: 'Control', split: 50, desc: 'Monthly selected by default' }, { name: 'Annual default', split: 50, desc: 'Annual pre-selected with "Save 20%" badge' }],
+    metrics: [{ id: 'subs', role: 'primary', eff: .072 }, { id: 'rpu', role: 'secondary', eff: .05 }, { id: 'tickets', role: 'guardrail', eff: .27 }],
+    notes: { before: [], after: [{ x: 66, y: 20, t: 'Annual is pre-selected. Price shown per month, billed yearly.' }] },
+    comments: [{ who: 'Karan Shah', when: '2026-09-03', text: 'Support saw a spike in "I was charged for a year" tickets. That lines up with the guardrail.' }]
+  }),
+  N('Simplified onboarding', 'feat_onboarding_3step', 'Growth', 'Hannah Kim', 'running', '2026-09-22', '2026-10-20', {
+    id: 'onboard', platforms: ['ios', 'android'], geos: ['IN', 'US', 'GB', 'DE'], users: 300000, traffic: 50, layer: 'None', tpl: 'onboarding',
+    hypothesis: 'If sign-up takes three steps instead of five, more new users will still be active a week later, because fewer drop out before seeing the product.',
+    variants: [{ name: 'Control', split: 50, desc: 'Five-step onboarding' }, { name: 'Three steps', split: 50, desc: 'Phone and interests moved after first session' }],
+    metrics: [{ id: 'ret7', role: 'primary', eff: .045 }, { id: 'sess', role: 'secondary', eff: .03 }, { id: 'crash', role: 'guardrail', eff: 0 }],
+    sequential: true, notes: { before: [{ x: 50, y: 17, t: 'Five steps before the home screen.' }], after: [{ x: 50, y: 17, t: 'Three steps. Phone number and interests are asked later.' }, { x: 50, y: 64, t: 'New: Continue with Google.' }] },
+    comments: []
+  }),
+  N('Personalised home banner', 'feat_home_banner_ml', 'Growth', 'Tomás Rivera', 'running', '2026-09-28', '2026-10-26', {
+    id: 'banner', platforms: ['ios', 'android', 'mweb'], geos: ['IN', 'ID', 'BR'], users: 600000, traffic: 25, layer: 'Home & discovery', tpl: 'home',
+    hypothesis: 'If the home banner shows a category picked from each person\'s recent browsing, more people will click it, because it matches what they came for.',
+    variants: [{ name: 'Control', split: 34, desc: 'Same seasonal banner for everyone' }, { name: 'ML banner', split: 33, desc: 'Model-ranked category banner' }, { name: 'Rule-based', split: 33, desc: 'Last-viewed category banner' }],
+    metrics: [{ id: 'ctr', role: 'primary', eff: .09, eff2: .035 }, { id: 'rpu', role: 'secondary', eff: .012 }, { id: 'lat', role: 'guardrail', eff: 0 }],
+    srm: .012, notes: { before: [{ x: 50, y: 28, t: 'One seasonal banner for everyone.' }], after: [{ x: 50, y: 28, t: 'Banner picks a category from recent browsing.' }] },
+    comments: [{ who: 'Priya Raman', when: '2026-10-06', text: 'SRM alert fired on day 6. Looks like the Rule-based arm is under-assigned on mobile web; checking the SDK version.' }]
+  }),
+  N('Price anchoring on plan cards', 'feat_pricing_anchor', 'Pricing', 'Sofia Alvarez', 'terminated', '2026-09-07', '2026-10-05', {
+    id: 'anchor', platforms: ['web'], geos: ['US', 'CA'], users: 380000, traffic: 15, layer: 'Pricing & plans', tpl: 'plans', stoppedOn: '2026-09-19',
+    stopReason: 'Guardrail breach: subscription starts fell significantly in week 1.',
+    hypothesis: 'If each plan shows a struck-through "list price", the discount will feel bigger and more people will subscribe.',
+    variants: [{ name: 'Control', split: 50, desc: 'Plain plan prices' }, { name: 'Anchored', split: 50, desc: 'Struck-through list price above the real price' }],
+    metrics: [{ id: 'subs', role: 'primary', eff: -.12 }, { id: 'bounce', role: 'secondary', eff: .03 }, { id: 'tickets', role: 'guardrail', eff: .02 }],
+    notes: { before: [], after: [{ x: 50, y: 42, t: 'Struck-through list price added above each plan price.' }] },
+    comments: [{ who: 'Sofia Alvarez', when: '2026-09-19', text: 'Stopping early. Several users mentioned the anchor felt misleading in the exit survey.' }]
+  }),
+  N('Weekly push digest', 'feat_notif_digest', 'Engagement', 'Lena Fischer', 'completed', '2026-08-04', '2026-09-01', {
+    id: 'digest', platforms: ['ios', 'android'], geos: ['DE', 'FR', 'GB'], users: 260000, traffic: 40, layer: 'Notifications', tpl: 'notif',
+    hypothesis: 'If we bundle promotional pushes into one weekly digest, people will open the app as often, and fewer will turn notifications off.',
+    variants: [{ name: 'Control', split: 50, desc: 'Individual pushes' }, { name: 'Digest', split: 50, desc: 'One Sunday digest' }],
+    metrics: [{ id: 'sess', role: 'primary', eff: .004 }, { id: 'unsub', role: 'guardrail', eff: -.31 }],
+    notes: { before: [{ x: 50, y: 40, t: 'Four separate promo pushes in a day.' }], after: [{ x: 50, y: 34, t: 'One digest card replaces individual promos.' }] },
+    comments: [{ who: 'Lena Fischer', when: '2026-09-03', text: 'Sessions flat, but opt-outs dropped by about a third. Proposing we ship for the notification health win.' }]
+  }),
+  N('Saved cards at checkout', 'feat_saved_cards', 'Payments', 'Arjun Mehta', 'running', '2026-09-29', '2026-10-27', {
+    id: 'cards', platforms: ['web', 'mweb'], geos: ['US', 'GB', 'SG', 'AE'], users: 220000, traffic: 30, layer: 'Checkout surface', tpl: 'cards',
+    hypothesis: 'If the last-used card is pre-selected, fewer payments will fail and more checkouts will complete.',
+    variants: [{ name: 'Control', split: 50, desc: 'No payment method selected' }, { name: 'Saved card', split: 50, desc: 'Last-used card pre-selected' }],
+    metrics: [{ id: 'conv', role: 'primary', eff: .018 }, { id: 'payerr', role: 'guardrail', eff: -.08 }, { id: 'lat', role: 'guardrail', eff: 0 }],
+    notes: { before: [], after: [{ x: 50, y: 38, t: 'Last-used card pre-selected; CVV only.' }] }, comments: []
+  }),
+  N('Free-shipping progress bar', 'feat_freeship_bar', 'Checkout', 'Priya Raman', 'completed', '2026-07-14', '2026-08-11', {
+    id: 'freeship', platforms: ['ios', 'android', 'mweb', 'web'], geos: ['US', 'CA'], users: 480000, traffic: 20, layer: 'Checkout surface', tpl: 'shipping',
+    hypothesis: 'If the cart shows how much more is needed for free shipping, people will add an item to reach it and order value will rise.',
+    variants: [{ name: 'Control', split: 50, desc: 'Shipping fee shown at payment' }, { name: 'Progress bar', split: 50, desc: '"Add $X for free shipping" bar in cart' }],
+    metrics: [{ id: 'aov', role: 'primary', eff: .052 }, { id: 'conv', role: 'secondary', eff: .006 }, { id: 'lat', role: 'guardrail', eff: 0 }],
+    notes: { before: [], after: [{ x: 50, y: 30, t: 'Progress bar shows the gap to free shipping.' }] }, comments: [], rollout: 100
+  }),
+  N('Reviews above the fold', 'feat_pdp_reviews_top', 'Search', 'Daniel Okafor', 'completed', '2026-08-31', '2026-09-28', {
+    id: 'reviews', platforms: ['mweb'], geos: ['IN', 'ID'], users: 340000, traffic: 25, layer: 'Home & discovery', tpl: 'product',
+    hypothesis: 'If the rating summary sits under the product title, people will trust the product sooner and convert more.',
+    variants: [{ name: 'Control', split: 50, desc: 'Reviews at the bottom of the page' }, { name: 'Reviews on top', split: 50, desc: 'Rating summary under the title' }],
+    metrics: [{ id: 'conv', role: 'primary', eff: -.045 }, { id: 'lat', role: 'guardrail', eff: .03 }],
+    notes: { before: [{ x: 50, y: 92, t: 'Reviews were below the fold.' }], after: [{ x: 50, y: 52, t: 'Rating summary moved under the title. It pushed the Add to cart button down.' }] },
+    comments: [{ who: 'Hannah Kim', when: '2026-09-29', text: 'The button moved below the fold on small phones. Likely the cause of the drop.' }]
+  }),
+  N('Dark mode as default', 'feat_theme_dark_default', 'Design Systems', 'Noah Becker', 'scheduled', '2026-10-15', '2026-11-12', {
+    id: 'dark', platforms: ['ios', 'android'], geos: ['JP', 'DE', 'US'], users: 200000, traffic: 10, layer: 'None', tpl: 'dark',
+    hypothesis: 'If new installs start in dark mode when the phone is in dark mode, evening sessions will last longer.',
+    variants: [{ name: 'Control', split: 50, desc: 'Light theme default' }, { name: 'Follow system', split: 50, desc: 'Theme follows the phone setting' }],
+    metrics: [{ id: 'sess', role: 'primary', eff: .01 }, { id: 'crash', role: 'guardrail', eff: 0 }],
+    notes: { before: [], after: [] }, comments: []
+  }),
+  N('Help-centre chat assistant', 'feat_help_chat', 'Customer Care', 'Karan Shah', 'draft', '2026-10-26', '2026-11-23', {
+    id: 'chat', platforms: ['web', 'mweb'], geos: ['IN', 'US', 'GB'], users: 150000, traffic: 15, layer: 'None', tpl: 'chat',
+    hypothesis: 'If the help centre offers a chat assistant first, fewer people will need to contact support, without lowering CSAT.',
+    variants: [{ name: 'Control', split: 50, desc: 'Article search only' }, { name: 'Chat assistant', split: 50, desc: 'Assistant answers before contact form' }],
+    metrics: [{ id: 'tickets', role: 'primary', eff: -.12 }, { id: 'csat', role: 'guardrail', eff: 0 }],
+    notes: { before: [], after: [] }, comments: []
+  })
+];
+function seedLog(e) {
+  const L = [{ when: addDays(e.start, -6), text: `${e.owner} created the experiment` }, { when: addDays(e.start, -3), text: 'Approved by Experiment Review (A. Mehta)' }];
+  if (!['draft', 'scheduled'].includes(e.status)) L.push({ when: e.start, text: `Launched to ${e.traffic}% of eligible traffic` });
+  if (e.status === 'terminated') L.push({ when: e.stoppedOn, text: 'Stopped early. ' + e.stopReason });
+  if (e.status === 'completed') L.push({ when: e.end, text: 'Ended on schedule. Verdict computed.' });
+  if (e.rollout) L.push({ when: addDays(e.end, 2), text: 'Winning variant rolled out to 100%' });
+  return L;
+}
+
+/* ---------- state ---------- */
+const STATE_V = 3;
+let metrics, exps, adobe;
+function load() {
+  const s = store.get('state', null);
+  if (s && s.v === STATE_V) { metrics = s.metrics; exps = s.exps; adobe = s.adobe; }
+  else {
+    metrics = SEED_METRICS.map(m => ({ ...m }));
+    exps = SEED_EXPS.map(e => ({ ...e, log: seedLog(e) }));
+    adobe = { connected: false, suite: null };
+  }
+}
+function save() { store.set('state', { v: STATE_V, metrics, exps, adobe }); }
+const M = id => metrics.find(m => m.id === id) || { id, name: id, cat: 'Business', type: 'rate', dir: 1, base: .1, unit: '%' };
+load();
+
+/* ---------- statistics ---------- */
+function fmtVal(md, v) {
+  if (md.type === 'rate') return (v * 100).toFixed(v < .1 ? 2 : 1) + '%';
+  if (md.unit === '$') return '$' + v.toFixed(2);
+  if (md.unit === 's') return v.toFixed(2) + ' s';
+  return v.toFixed(2);
+}
+function timing(e) {
+  const planned = Math.max(1, daysBetween(e.start, e.end));
+  let endEff = e.status === 'terminated' ? e.stoppedOn : e.status === 'running' ? (TODAY_ISO < e.end ? TODAY_ISO : e.end) : e.end;
+  const elapsed = ['draft', 'scheduled'].includes(e.status) ? 0 : Math.max(1, daysBetween(e.start, endEff));
+  return { planned, elapsed, frac: Math.min(1, elapsed / planned), endEff };
+}
+function compute(e) {
+  const t = timing(e);
+  if (!t.elapsed) return null;
+  const enrolled = Math.round(e.users * t.frac);
+  // assignment counts and SRM check
+  const r0 = rng(hash(e.id + 'assign'));
+  const counts = e.variants.map((v, i) => {
+    let skew = 0; if (e.srm && i === e.variants.length - 1) skew = -e.srm; else if (e.srm) skew = e.srm / (e.variants.length - 1);
+    return Math.round(enrolled * v.split / 100 * (1 + skew) + gauss(r0) * Math.sqrt(enrolled * v.split / 100) * .5);
+  });
+  const tot = counts.reduce((a, b) => a + b, 0);
+  let chi = 0; counts.forEach((o, i) => { const ex = tot * e.variants[i].split / 100; chi += (o - ex) ** 2 / ex; });
+  const k = e.variants.length - 1;
+  const wh = (Math.cbrt(chi / k) - (1 - 2 / (9 * k))) / Math.sqrt(2 / (9 * k));
+  const srmP = k === 1 ? 2 * (1 - Phi(Math.sqrt(chi))) : 1 - Phi(wh);
+  const treat = [];
+  for (let ti = 1; ti < e.variants.length; ti++) {
+    const res = {};
+    for (const mm of e.metrics) res[mm.id] = metricResult(e, M(mm.id), mm, ti, counts[0], counts[ti], t.elapsed);
+    treat.push(res);
+  }
+  return { counts, srmP, srm: srmP < 0.001, treat, t, enrolled: tot };
+}
+function metricResult(e, md, mm, ti, nC, nT, D) {
+  const r = rng(hash(e.id + md.id + ti));
+  const eff = ti === 1 ? (mm.eff ?? 0) : (mm.eff2 ?? (mm.eff ?? 0) * .4);
+  const base = md.base * (1 + (r() - .5) * .03);
+  const vr = e.cuped ? .8 : 1;
+  let seC, seT, c, t;
+  if (md.type === 'rate') {
+    const pt = Math.min(.9999, base * (1 + eff));
+    seC = Math.sqrt(base * (1 - base) / nC) * vr; seT = Math.sqrt(pt * (1 - pt) / nT) * vr;
+    c = base + gauss(r) * seC * .5; t = pt + gauss(r) * seT * .5;
+  } else {
+    seC = md.sd / Math.sqrt(nC) * vr; seT = md.sd / Math.sqrt(nT) * vr;
+    c = base + gauss(r) * seC * .5; t = base * (1 + eff) + gauss(r) * seT * .5;
+  }
+  const diff = t - c, se = Math.sqrt(seC * seC + seT * seT), z = diff / se, p = 2 * (1 - Phi(Math.abs(z)));
+  const series = []; let w = gauss(r);
+  for (let k = 1; k <= D; k++) {
+    w = .75 * w + .66 * gauss(r);
+    const f = Math.sqrt(D / k);
+    const est = diff + se * Math.sqrt(Math.max(0, D / k - 1)) * w * .7;
+    const cd = c + gauss(r) * seC * f * .4;
+    series.push({ k, lift: est / c, lo: (est - 1.96 * se * f) / c, hi: (est + 1.96 * se * f) / c, c: cd, t: cd + est });
+  }
+  return { c, t, diff, se, z, p, lift: diff / c, lo: (diff - 1.96 * se) / c, hi: (diff + 1.96 * se) / c, sig: p < .05, good: diff * md.dir > 0, series, mde: 2.8 * se / c };
+}
+function verdict(e, R) {
+  if (!R) return { k: 'pending', label: e.status === 'draft' ? 'Draft' : 'Scheduled', short: e.status === 'draft' ? 'Not launched' : 'Starts ' + fmtD(e.start) };
+  const prims = e.metrics.filter(m => m.role === 'primary');
+  const prim = prims[0] || e.metrics[0];
+  const pmd = M(prim.id);
+  let best = 0;
+  R.treat.forEach((tr, i) => { if (tr[prim.id].z * pmd.dir > R.treat[best][prim.id].z * pmd.dir) best = i; });
+  const res = R.treat[best], pr = res[prim.id];
+  const guards = e.metrics.filter(m => m.role === 'guardrail');
+  const breaches = guards.filter(g => res[g.id].sig && !res[g.id].good);
+  const guardWins = guards.filter(g => res[g.id].sig && res[g.id].good);
+  let k = breaches.length ? 'failure' : pr.sig ? (pr.good ? 'success' : 'failure') : 'flat';
+  const running = e.status === 'running';
+  const tname = e.variants[best + 1].name;
+  let label = { success: 'Success', failure: 'Failure', flat: 'Flat' }[k];
+  if (running) label = breaches.length ? 'Guardrail at risk' : pr.sig ? (pr.good ? 'Trending positive' : 'Trending negative') : 'No clear signal yet';
+  return { k, label, running, best, tname, prim, pmd, pr, res, breaches, guardWins, guards };
+}
+function summaryText(e, R, V) {
+  if (!R) return [e.status === 'draft' ? 'This experiment is still a draft. Results appear once it launches.' : `Launches on ${fmtDY(e.start)} to ${e.traffic}% of eligible traffic.`];
+  const P = [];
+  const pn = V.pmd.name.toLowerCase(), pr = V.pr;
+  const ci = `95% CI ${pct(pr.lo)} to ${pct(pr.hi)}, p ${pr.p < .001 ? '< 0.001' : '= ' + fmtP(pr.p)}`;
+  const sec = e.metrics.filter(m => m.role === 'secondary' && V.res[m.id].sig).map(m => `${M(m.id).name.toLowerCase()} ${pct(V.res[m.id].lift)}`);
+  if (V.running) P.push(`Day ${R.t.elapsed} of ${R.t.planned}. ${R.enrolled.toLocaleString('en-US')} users enrolled so far. Results are provisional until the planned end on ${fmtDY(e.end)}${e.sequential ? '; sequential testing is on, so it is safe to look early' : ''}.`);
+  if (V.breaches.length) {
+    const b = V.breaches.map(g => `${M(g.id).name.toLowerCase()} got worse by ${pct(Math.abs(V.res[g.id].lift)).replace('+', '')}`).join(' and ');
+    P.push(`${V.tname} moved ${pn} by ${pct(pr.lift)} (${ci}), but ${b}. That breaches a guardrail, so the change ${V.running ? 'may need to be stopped' : 'should not ship as is'}.`);
+  } else if (pr.sig && pr.good) {
+    P.push(`${V.tname} ${V.pmd.dir > 0 ? 'increased' : 'reduced'} ${pn} by ${pct(Math.abs(pr.lift)).replace('+', '')} against control (${ci}). No guardrail moved in a harmful direction.`);
+  } else if (pr.sig) {
+    P.push(`${V.tname} made ${pn} worse: ${pct(pr.lift)} against control (${ci}).`);
+  } else {
+    P.push(`No significant difference in ${pn}: ${pct(pr.lift)} (${ci}). With this sample the test could reliably detect a change of about ±${(pr.mde * 100).toFixed(1)}%, so any real effect is smaller than that.`);
+  }
+  if (sec.length) P.push(`Secondary metrics that moved: ${sec.join(', ')}.`);
+  if (V.guardWins.length) P.push(`Guardrail improvement: ${V.guardWins.map(g => `${M(g.id).name.toLowerCase()} ${pct(V.res[g.id].lift)}`).join(', ')}.`);
+  if (R.srm) P.push(`Warning: users were not split as planned (sample ratio mismatch, p ${fmtP(R.srmP)}). Check assignment before trusting these numbers.`);
+  if (!V.running) {
+    const rec = V.k === 'success' ? `Recommendation: roll out ${V.tname} to 100% of ${e.platforms.map(p => PLATFORMS.find(x => x.id === p).name).join(', ')}.`
+      : V.k === 'failure' ? 'Recommendation: keep control. Review the notes below before iterating.'
+        : (V.guardWins.length ? `Recommendation: ship ${V.tname} for the guardrail improvement if the team agrees; the primary metric is unchanged.` : 'Recommendation: keep control unless there is a qualitative reason to ship.');
+    P.push(rec);
+  }
+  if (e.status === 'terminated') P.unshift(`Stopped early on ${fmtDY(e.stoppedOn)}. ${e.stopReason || ''}`);
+  return P;
+}
+function verdictClass(V) { if (V.k === 'pending') return 'pending'; if (V.running) return V.breaches.length ? 'failure' : V.pr.sig ? (V.pr.good ? 'trend' : 'failure') : 'pending'; return V.k; }
+function verdictPill(e) {
+  const R = compute(e), V = verdict(e, R), c = verdictClass(V);
+  const cls = { success: 'v-success', failure: 'v-failure', flat: 'v-flat', trend: 'v-trend', pending: 'v-pending' }[c];
+  const ic = { success: ICON.check, failure: ICON.x, flat: ICON.flat, trend: ICON.up, pending: '' }[c];
+  return `<span class="pill ${cls}">${ic ? ic.replace('<svg', '<svg width="12" height="12"') : ''}${esc(V.running ? V.label : V.k === 'pending' ? V.short : V.label)}</span>`;
+}
+const STATUS_LABEL = { running: 'Running', completed: 'Completed', terminated: 'Terminated', scheduled: 'Scheduled', draft: 'Draft' };
+const statusPill = s => `<span class="pill st-${s}">${s === 'running' ? '<span class="dot live"></span>' : ''}${STATUS_LABEL[s]}</span>`;
+
+/* ---------- mock screens ---------- */
+function screen(tpl, side, e) {
+  const A = side === 'after';
+  const sb = '<div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>';
+  const li = (l, r) => `<div class="li"><span>${l}</span><b>${r}</b></div>`;
+  let b = '';
+  switch (tpl) {
+    case 'checkout':
+      b = `<div class="tb">Cart <span class="sm">2 items</span></div><div class="ph" style="height:70px">Trail runner · size 9</div>${li('Trail runners', '$89.00')}${li('Running socks (3)', '$14.00')}${li('Delivery', 'Free')}${li('Total', '$103.00')}<div style="flex:1"></div>` +
+        (A ? `<div class="chg"><div class="mb p">Pay $103.00 · 1 tap</div></div><div class="sm" style="text-align:center">Visa •••• 4242 · Home address</div>` : `<div class="mb s">Proceed to checkout</div><div class="sm" style="text-align:center">Address → Payment → Review</div>`);
+      break;
+    case 'search':
+      b = `<div class="tb">Search</div><div class="in">running shoes</div>` + (A ? `<div class="mchips chg"><span>Size 9</span><span>Under $100</span><span>4★ +</span><span>Brand ▾</span></div>` : `<div class="sm" style="text-align:right;text-decoration:underline">Filter</div>`) +
+        `<div class="ph" style="height:64px">Result 1</div><div class="ph" style="height:64px">Result 2</div><div class="ph" style="height:64px">Result 3</div><div class="ph" style="height:64px">Result 4</div>`;
+      break;
+    case 'pricing':
+      b = `<div class="tb">Choose a plan</div><div class="${A ? 'chg' : ''}" style="display:flex;gap:4px;background:var(--surface-2);padding:3px;border-radius:8px"><div class="mb ${A ? '' : 'p'}" style="flex:1;padding:5px">Monthly</div><div class="mb ${A ? 'p' : ''}" style="flex:1;padding:5px">Annual ${A ? '· Save 20%' : ''}</div></div>` +
+        `<div class="mc"><b>Plus</b><div style="font-size:16px;font-weight:700">${A ? '$7.99' : '$9.99'}<span class="sm">/mo${A ? ', billed yearly' : ''}</span></div><div class="sm">Ad-free · offline</div></div><div class="mc"><b>Family</b><div style="font-size:16px;font-weight:700">${A ? '$12.79' : '$15.99'}<span class="sm">/mo${A ? ', billed yearly' : ''}</span></div><div class="sm">Up to 6 people</div></div><div style="flex:1"></div><div class="mb p">Start free trial</div>`;
+      break;
+    case 'plans':
+      b = `<div class="tb">Plans</div>` + ['Starter|$12', 'Pro|$29', 'Team|$59'].map((x, i) => { const [n, p] = x.split('|'); return `<div class="mc ${A && i === 1 ? 'chg' : ''}"><b>${n}</b>${A ? `<div class="sm" style="text-decoration:line-through">List $${Math.round(parseInt(p.slice(1)) * 1.6)}</div>` : ''}<div style="font-size:16px;font-weight:700">${p}<span class="sm">/mo</span></div></div>`; }).join('') + `<div style="flex:1"></div><div class="mb p">Continue</div>`;
+      break;
+    case 'onboarding':
+      b = `<div class="${A ? 'chg' : ''}"><div class="sm">Step 1 of ${A ? 3 : 5}</div><div class="bar" style="margin-top:4px"><i style="width:${A ? 33 : 20}%"></i></div></div><div class="tb">Create your account</div><div class="in">Full name</div><div class="in">Email</div>` +
+        (A ? `<div class="mb s chg">Continue with Google</div>` : `<div class="in">Phone number</div><div class="in">Pick 3 interests</div>`) + `<div style="flex:1"></div><div class="mb p">Next</div>`;
+      break;
+    case 'home':
+      b = `<div class="tb">Home <span class="sm">Hi, Ana</span></div>` + (A ? `<div class="ph chg" style="height:110px;background:var(--accent-soft);color:var(--accent)"><b style="font-size:13px">Picked for you</b>Trail runners from $59</div>` : `<div class="ph" style="height:110px"><b style="font-size:13px">Festive sale</b>Up to 50% off</div>`) +
+        `<div class="mchips"><span>Shoes</span><span>Bags</span><span>Watches</span><span>Deals</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><div class="ph" style="height:80px">Item</div><div class="ph" style="height:80px">Item</div><div class="ph" style="height:80px">Item</div><div class="ph" style="height:80px">Item</div></div>`;
+      break;
+    case 'notif':
+      b = `<div style="text-align:center;font-size:30px;font-weight:300;margin:6px 0">9:41</div>` + (A ? `<div class="mc chg"><b>Your week in Shopwise</b><div class="sm">3 deals · 1 price drop · order update</div></div><div class="mc"><b>Order shipped</b><div class="sm">Arrives Thursday</div></div>`
+        : ['Flash sale ends tonight!', 'Price drop on your wishlist', 'New arrivals in Shoes', 'Order shipped'].map(x => `<div class="mc"><b>Shopwise</b><div class="sm">${x}</div></div>`).join(''));
+      break;
+    case 'product':
+      b = `<div class="ph" style="height:150px">Product photo</div><div class="tb" style="font-size:13px">Trail runner GTX</div>` + (A ? `<div class="chg sm" style="font-size:11px;padding:4px">★★★★★ 4.6 · 2,341 reviews<br>"Great grip on wet rock"</div>` : '') +
+        `<div style="font-size:15px;font-weight:700">$89.00</div><div class="mb p">Add to cart</div><div class="sm">Free returns · ships in 2 days</div><div style="flex:1"></div>` + (A ? '' : `<div class="sm" style="border-top:1px dashed var(--line);padding-top:6px">↓ Reviews (2,341) further down</div>`);
+      break;
+    case 'shipping':
+      b = `<div class="tb">Cart</div>` + (A ? `<div class="mc chg"><div class="sm">Add <b>$12.00</b> more for free shipping</div><div class="bar"><i style="width:80%"></i></div></div>` : '') + `${li('Rain jacket', '$48.00')}<div class="ph" style="height:60px">You may also like</div>${li('Subtotal', '$48.00')}${li('Shipping', A ? 'Free over $60' : '$6.99')}<div style="flex:1"></div><div class="mb p">Checkout</div>`;
+      break;
+    case 'cards':
+      b = `<div class="tb">Payment</div>` + (A ? `<div class="mc chg"><b>● Visa •••• 4242</b><div class="sm">Last used · expires 08/28</div><div class="in" style="margin-top:6px">CVV</div></div><div class="mc">○ Add new card</div>` : `<div class="mc">○ Credit or debit card</div><div class="mc">○ PayPal</div><div class="mc">○ Apple Pay</div>`) + `<div style="flex:1"></div><div class="mb p">Pay $103.00</div>`;
+      break;
+    case 'dark':
+      return `<div class="phone"><div class="scr ${A ? 'dark chg' : ''}">${sb}<div class="tb">Library</div><div class="ph" style="height:90px">Continue reading</div><div class="ph" style="height:90px">Recommended</div><div class="ph" style="height:90px">New this week</div></div></div>`;
+    case 'chat':
+      b = `<div class="tb">Help centre</div><div class="in">Search articles</div><div class="ph" style="height:50px">Track my order</div><div class="ph" style="height:50px">Returns & refunds</div><div style="flex:1"></div>` + (A ? `<div class="mc chg"><b>Ask the assistant</b><div class="sm">Get an answer in seconds</div></div>` : `<div class="mb s">Contact support</div>`);
+      break;
+    default:
+      b = `<div class="tb">${esc(e?.name || 'Screen')}</div><div class="ph" style="height:120px">${A ? 'Changed screen' : 'Current screen'}</div><div class="ph" style="height:60px">Content</div>`;
+  }
+  return `<div class="phone"><div class="scr">${sb}${b}</div></div>`;
+}
+
+/* ---------- router ---------- */
+let route = 'dashboard';
+function go(h) { if (location.hash !== '#' + h) location.hash = h; else render(); }
+window.addEventListener('hashchange', render);
+function render() {
+  const h = (location.hash || '#dashboard').slice(1);
+  route = h;
+  $$('#navlinks a').forEach(a => a.classList.toggle('on', a.dataset.nav === (h.startsWith('exp-') ? 'dashboard' : h)));
+  const v = $('#view');
+  if (h === 'new') renderWizard(v);
+  else if (h === 'metrics') renderMetrics(v);
+  else if (h === 'guide') renderGuide(v);
+  else if (h.startsWith('exp-')) renderDetail(v, h.slice(4));
+  else renderDashboard(v);
+  renderAAStatus();
+  window.scrollTo(0, 0);
+}
+function renderAAStatus() {
+  $('#aaStatus').innerHTML = `<span class="dot ${adobe.connected ? 'on' : ''}"></span><span>${adobe.connected ? 'Adobe Analytics connected' : 'Connect Adobe Analytics'}</span>`;
+}
+$('#aaStatus').addEventListener('click', () => openAdobe());
+
+/* ---------- dashboard ---------- */
+let dashF = { q: '', status: 'all', team: 'all', platform: 'all', view: 'table' };
+function renderDashboard(v) {
+  const all = exps;
+  const by = s => all.filter(e => e.status === s).length;
+  const concluded = all.filter(e => ['completed', 'terminated'].includes(e.status)).map(e => verdict(e, compute(e)));
+  const wins = concluded.filter(x => x.k === 'success').length, fails = concluded.filter(x => x.k === 'failure').length, flats = concluded.filter(x => x.k === 'flat').length;
+  const winRate = concluded.length ? Math.round(wins / concluded.length * 100) : 0;
+  v.innerHTML = `
+  <div class="stack" style="gap:20px">
+    <div class="row between">
+      <div><div class="eyebrow">Across the organisation</div><h1>All experiments</h1></div>
+      <a class="btn pri" href="#new">${ICON.plus} New experiment</a>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><span>Running now</span><b>${by('running')}</b><span>${fmtInt(all.filter(e => e.status === 'running').reduce((a, e) => a + compute(e).enrolled, 0))} users enrolled</span></div>
+      <div class="kpi"><span>Concluded</span><b>${concluded.length}</b><span>${by('completed')} completed · ${by('terminated')} stopped early</span></div>
+      <div class="kpi"><span>Win rate</span><b>${winRate}%</b>
+        <div class="mix" role="img" aria-label="${wins} success, ${flats} flat, ${fails} failure">${wins ? `<i style="flex:${wins};background:var(--good)"></i>` : ''}${flats ? `<i style="flex:${flats};background:var(--flat)"></i>` : ''}${fails ? `<i style="flex:${fails};background:var(--bad)"></i>` : ''}</div>
+        <span>${wins} success · ${flats} flat · ${fails} failure</span></div>
+      <div class="kpi"><span>In the pipeline</span><b>${by('scheduled') + by('draft')}</b><span>${by('scheduled')} scheduled · ${by('draft')} draft</span></div>
+    </div>
+    <div class="card flush">
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;border-bottom:1px solid var(--line)">
+        <div class="row between">
+          <div class="statusbar" id="stbar">${['all', 'running', 'completed', 'terminated', 'scheduled', 'draft'].map(s => `<button type="button" data-s="${s}" class="${dashF.status === s ? 'on' : ''}">${s === 'all' ? 'All' : STATUS_LABEL[s]}<b>${s === 'all' ? all.length : by(s)}</b></button>`).join('')}</div>
+          <div class="seg" id="viewseg"><button type="button" data-v="table" class="${dashF.view === 'table' ? 'on' : ''}">List</button><button type="button" data-v="timeline" class="${dashF.view === 'timeline' ? 'on' : ''}">Timeline</button></div>
+        </div>
+        <div class="filters">
+          <input type="text" id="fq" placeholder="Search name, feature ID or owner" value="${esc(dashF.q)}" aria-label="Search experiments">
+          <select id="fteam" aria-label="Team"><option value="all">All teams</option>${TEAMS.map(t => `<option ${dashF.team === t ? 'selected' : ''}>${t}</option>`).join('')}</select>
+          <select id="fplat" aria-label="Platform"><option value="all">All platforms</option>${PLATFORMS.map(p => `<option value="${p.id}" ${dashF.platform === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div id="dashBody"></div>
+    </div>
+  </div>`;
+  $('#stbar').onclick = ev => { const b = ev.target.closest('button'); if (!b) return; dashF.status = b.dataset.s; renderDashboard(v); };
+  $('#viewseg').onclick = ev => { const b = ev.target.closest('button'); if (!b) return; dashF.view = b.dataset.v; renderDashboard(v); };
+  $('#fq').oninput = ev => { dashF.q = ev.target.value; drawDashBody(); };
+  $('#fteam').onchange = ev => { dashF.team = ev.target.value; drawDashBody(); };
+  $('#fplat').onchange = ev => { dashF.platform = ev.target.value; drawDashBody(); };
+  drawDashBody();
+}
+function filtered() {
+  const q = dashF.q.trim().toLowerCase();
+  return exps.filter(e => (dashF.status === 'all' || e.status === dashF.status) && (dashF.team === 'all' || e.team === dashF.team) && (dashF.platform === 'all' || e.platforms.includes(dashF.platform)) &&
+    (!q || [e.name, e.featureId, e.owner, e.team].join(' ').toLowerCase().includes(q)))
+    .sort((a, b) => { const o = { running: 0, scheduled: 1, draft: 2, completed: 3, terminated: 3 }; return o[a.status] - o[b.status] || b.start.localeCompare(a.start); });
+}
+function drawDashBody() {
+  const list = filtered(), el = $('#dashBody');
+  if (!list.length) { el.innerHTML = `<div style="padding:32px;text-align:center" class="muted">No experiments match these filters.</div>`; return; }
+  if (dashF.view === 'timeline') { el.innerHTML = `<div class="tbl-wrap">${gantt(list)}</div>`; $$('.g-row', el).forEach(r => r.onclick = () => go('exp-' + r.dataset.id)); return; }
+  el.innerHTML = `<div class="tbl-wrap"><table><thead><tr><th>Experiment</th><th>Status</th><th>Owner · team</th><th>Platforms</th><th>Dates</th><th class="r">Primary lift</th><th>Result</th></tr></thead><tbody>
+  ${list.map(e => {
+    const R = compute(e), V = verdict(e, R);
+    const lift = R ? `<span class="${V.pr.sig ? (V.pr.good ? 'up' : 'down') : 'muted'}">${pct(V.pr.lift)}</span>` : '<span class="muted">—</span>';
+    return `<tr class="click" data-id="${e.id}" tabindex="0"><td><div class="exname">${esc(e.name)}<small>${esc(e.featureId)}</small></div></td><td>${statusPill(e.status)}</td>
+      <td><div>${esc(e.owner)}</div><div class="muted" style="font-size:12px">${esc(e.team)}</div></td>
+      <td style="font-size:12.5px" class="ink2">${e.platforms.map(p => PLATFORMS.find(x => x.id === p).name.replace(' app', '')).join(', ')}</td>
+      <td class="num" style="white-space:nowrap;font-size:12.5px">${fmtD(e.start)} – ${fmtD(e.status === 'terminated' ? e.stoppedOn : e.end)}</td>
+      <td class="r liftcell">${lift}${R ? `<div class="muted" style="font-size:11px;font-family:var(--f-body)">${esc(V.pmd.name)}</div>` : ''}</td>
+      <td>${verdictPill(e)}${e.rollout ? '<div class="muted" style="font-size:11px;margin-top:3px">Shipped to 100%</div>' : ''}</td></tr>`;
+  }).join('')}</tbody></table></div>`;
+  $$('tr.click', el).forEach(r => { r.onclick = () => go('exp-' + r.dataset.id); r.onkeydown = ev => { if (ev.key === 'Enter') go('exp-' + r.dataset.id); }; });
+}
+function gantt(list) {
+  const starts = list.map(e => e.start).sort(), ends = list.map(e => e.end).sort();
+  let s0 = starts[0] < '2026-07-01' ? starts[0] : '2026-07-01'; s0 = s0.slice(0, 8) + '01';
+  let e0 = ends[ends.length - 1] > '2026-11-30' ? ends[ends.length - 1] : '2026-11-30';
+  const span = daysBetween(s0, e0);
+  const x = s => Math.max(0, Math.min(100, daysBetween(s0, s) / span * 100));
+  const months = []; let m = s0; while (m <= e0) { months.push(m); const d = dt(m); d.setUTCMonth(d.getUTCMonth() + 1); m = isoOf(d); }
+  const col = { running: ['var(--info)', 'var(--info-soft)'], completed: ['var(--ink-2)', 'var(--surface-2)'], terminated: ['var(--bad)', 'var(--bad-soft)'], scheduled: ['var(--flat)', 'var(--flat-soft)'], draft: ['var(--muted)', 'transparent'] };
+  return `<div class="gantt"><div class="g-axis">${months.map(mm => `<span style="left:${x(mm)}%">${dt(mm).toLocaleDateString('en-GB', { month: 'short', timeZone: 'UTC' })}</span>`).join('')}</div>
+  <div style="position:relative">
+  <div style="position:absolute;left:220px;right:0;top:0;bottom:0;pointer-events:none"><div class="g-today" style="left:${x(TODAY_ISO)}%"><b>Today</b></div></div>
+  ${list.map(e => { const end = e.status === 'terminated' ? e.stoppedOn : e.end; const [fg, bg] = col[e.status]; const R = compute(e), V = verdict(e, R);
+    return `<div class="g-row" data-id="${e.id}" title="${esc(e.name)}"><div class="lbl">${esc(e.name)}</div><div class="g-track"><div class="g-bar" style="left:${x(e.start)}%;width:${Math.max(1.5, x(end) - x(e.start))}%;background:${bg};color:${fg};border:1.5px ${e.status === 'draft' ? 'dashed' : 'solid'} ${fg}">${STATUS_LABEL[e.status]}${R && !V.running ? ' · ' + V.label : ''}</div></div></div>`; }).join('')}
+  </div></div>`;
+}
+
+/* ---------- detail ---------- */
+let det = { metric: null, ti: 0, mode: 'lift', hl: true, adding: null };
+function renderDetail(v, id) {
+  const e = exps.find(x => x.id === id);
+  if (!e) { v.innerHTML = `<a class="crumb" href="#dashboard">${ICON.back} All experiments</a><div class="card">That experiment no longer exists.</div>`; return; }
+  if (det.id !== id) det = { id, metric: (e.metrics.find(m => m.role === 'primary') || e.metrics[0]).id, ti: null, mode: 'lift', hl: true, adding: null };
+  const R = compute(e), V = verdict(e, R), T = timing(e);
+  if (det.ti === null) det.ti = R ? V.best : 0;
+  const vc = verdictClass(V);
+  const P = summaryText(e, R, V);
+  const wIcon = { success: ICON.check, failure: ICON.x, flat: ICON.flat, trend: ICON.up, pending: ICON.info }[vc];
+  const plats = e.platforms.map(p => PLATFORMS.find(x => x.id === p).name);
+  const geos = e.geos.map(g => GEOS.find(x => x.id === g)?.name || g);
+  v.innerHTML = `
+  <a class="crumb" href="#dashboard">${ICON.back} All experiments</a>
+  <div class="stack" style="gap:20px">
+    <div class="dhead">
+      <div style="min-width:0;flex:1">
+        <div class="row" style="gap:10px">${statusPill(e.status)}${e.rollout ? '<span class="pill v-success">Shipped to 100%</span>' : ''}<span class="mono muted">${esc(e.featureId)}</span><button class="btn ghost sm" id="cpId" type="button" aria-label="Copy feature ID">${ICON.copy}</button></div>
+        <h1 style="margin-top:8px">${esc(e.name)}</h1>
+        <div class="meta"><span>Owner <b>${esc(e.owner)}</b></span><span>Team <b>${esc(e.team)}</b></span><span>Layer <b>${esc(e.layer || 'None')}</b></span></div>
+        <p class="hyp"><b>Hypothesis.</b> ${esc(e.hypothesis || '—')}</p>
+      </div>
+      <div class="row" style="align-items:flex-start">
+        <button class="btn" type="button" id="exportBtn">${ICON.dl} Export</button>
+        <button class="btn" type="button" id="copySum">${ICON.copy} Copy summary</button>
+        ${e.status === 'running' ? `<button class="btn danger" type="button" id="stopBtn">Stop experiment</button>` : ''}
+        ${e.status === 'draft' ? `<button class="btn pri" type="button" id="launchDraft">Schedule launch</button>` : ''}
+        ${!e.rollout && R && !V.running && (V.k === 'success' || (V.k === 'flat' && V.guardWins.length)) ? `<button class="btn pri" type="button" id="rollBtn">Roll out ${esc(V.tname)}</button>` : ''}
+      </div>
+    </div>
+    <div id="stopPanel"></div>
+
+    <div class="card">
+      <div class="prog">
+        <div><div class="k">Schedule</div><div class="v">${fmtD(e.start)} – ${fmtD(e.end)}</div><div class="bar"><i style="width:${(T.frac * 100).toFixed(0)}%;${e.status === 'terminated' ? 'background:var(--bad)' : ''}"></i></div><div class="k" style="margin-top:4px">${R ? `Day ${T.elapsed} of ${T.planned}` : `${T.planned} days planned`}</div></div>
+        <div><div class="k">Users enrolled</div><div class="v">${R ? fmtInt(R.enrolled) : '0'} <span class="muted" style="font-size:13px;font-weight:500">/ ${fmtN(e.users)}</span></div><div class="bar"><i style="width:${R ? Math.min(100, R.enrolled / e.users * 100).toFixed(0) : 0}%"></i></div><div class="k" style="margin-top:4px">${e.traffic}% of eligible traffic</div></div>
+        <div><div class="k">Platforms</div><div class="row" style="gap:4px;margin-top:4px">${plats.map(p => `<span class="chip">${p}</span>`).join('')}</div></div>
+        <div><div class="k">Geography</div><div class="row" style="gap:4px;margin-top:4px">${geos.map(p => `<span class="chip">${p}</span>`).join('')}</div></div>
+      </div>
+    </div>
+
+    <section class="verdict" aria-label="Verdict">
+      <div class="big">
+        <span class="eyebrow">${V.running ? 'Early read' : R ? 'Verdict' : 'Status'}</span>
+        <div class="word w-${vc}">${wIcon}<span>${esc(V.k === 'pending' ? V.label : V.label)}</span></div>
+        ${R ? `<span class="ink2" style="font-size:13px">${esc(V.pmd.name)} <b class="mono ${V.pr.sig ? (V.pr.good ? 'up' : 'down') : ''}">${pct(V.pr.lift)}</b></span><span class="muted" style="font-size:12px">Best variant: ${esc(V.tname)}</span>` : ''}
+      </div>
+      <div class="summary">
+        <h2 style="margin-bottom:8px">Summary</h2>
+        ${P.map(p => `<p>${esc(p)}</p>`).join('')}
+        ${R ? `<div class="checks">
+          ${chk(T.frac >= 1 || e.status === 'terminated', `Ran ${T.elapsed} of ${T.planned} planned days`, T.frac < 1 && e.status === 'running' ? 'info' : null)}
+          ${chk(!R.srm, R.srm ? `Sample ratio mismatch (p ${fmtP(R.srmP)})` : 'Traffic split as planned (SRM check passed)')}
+          ${chk(!V.breaches.length, V.breaches.length ? `${V.breaches.length} guardrail${V.breaches.length > 1 ? 's' : ''} breached` : `All ${V.guards.length} guardrails healthy`)}
+          ${chk(V.pr.sig, V.pr.sig ? 'Primary metric reached 95% confidence' : 'Primary metric not significant at 95%', V.pr.sig ? null : 'warn')}
+        </div>` : ''}
+      </div>
+    </section>
+
+    ${R ? `
+    <div class="card">
+      <div class="card-h"><div><h2>Metrics scorecard</h2><p class="muted" style="font-size:12.5px">Relative change against control with 95% confidence interval. Select a row to chart it.</p></div>
+      ${e.variants.length > 2 ? `<div class="seg" id="tiSeg">${e.variants.slice(1).map((vv, i) => `<button type="button" data-i="${i}" class="${det.ti === i ? 'on' : ''}">${esc(vv.name)}</button>`).join('')}</div>` : ''}</div>
+      <div class="tbl-wrap" id="scorecard"></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><div><h2 id="chartTitle"></h2><p class="muted" style="font-size:12.5px" id="chartSub"></p></div>
+        <div class="row"><select id="chartMetric" aria-label="Metric to chart" style="width:auto">${e.metrics.map(m => `<option value="${m.id}" ${det.metric === m.id ? 'selected' : ''}>${esc(M(m.id).name)}</option>`).join('')}</select>
+        <div class="seg" id="modeSeg"><button type="button" data-m="lift" class="${det.mode === 'lift' ? 'on' : ''}">Lift over time</button><button type="button" data-m="value" class="${det.mode === 'value' ? 'on' : ''}">Metric value</button></div></div></div>
+      <div class="chartbox" id="chart"></div>
+      <div class="legend" id="chartLegend" style="margin-top:10px"></div>
+    </div>
+    <div class="grid2">
+      <div class="card"><div class="card-h"><div><h2>Segments</h2><p class="muted" style="font-size:12.5px">${esc(V.pmd.name)} lift for ${esc(e.variants[det.ti + 1].name)}, by platform and country</p></div></div><div id="segs"></div></div>
+      <div class="card"><div class="card-h"><div><h2>Traffic split</h2><p class="muted" style="font-size:12.5px">Planned versus actual assignment</p></div></div>${splitTable(e, R)}</div>
+    </div>` : ''}
+
+    <div class="card">
+      <div class="card-h"><div><h2>What changed</h2><p class="muted" style="font-size:12.5px">The screen people saw before, and what the test variant showed. Numbered pins explain each change.</p></div>
+        <label class="toggle"><input type="checkbox" id="hlT" ${det.hl ? 'checked' : ''}> Highlight changes</label></div>
+      <div class="screens ${det.hl ? '' : 'hl-off'}" id="screens">${['before', 'after'].map(side => shotCol(e, side)).join('')}</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card"><h2 style="margin-bottom:12px">Setup</h2>${setupDl(e)}</div>
+      <div class="card"><h2 style="margin-bottom:12px">Discussion</h2>
+        <div class="stack" id="comments" style="gap:12px">${(e.comments || []).map(c => commentHTML(c)).join('') || '<p class="muted">No comments yet. Add context for anyone reading this later.</p>'}</div>
+        <form id="cform" class="stack" style="gap:8px;margin-top:14px"><textarea id="ctext" placeholder="Add a comment for the team" aria-label="Comment"></textarea><div><button class="btn pri sm" type="submit">Post comment</button></div></form>
+        <h3 style="margin:20px 0 10px">Activity</h3>
+        <ul class="log">${(e.log || []).slice().reverse().map(l => `<li><span class="muted num">${fmtD(l.when)}</span> · ${esc(l.text)}</li>`).join('')}</ul>
+      </div>
+    </div>
+  </div>`;
+
+  $('#cpId').onclick = () => copyText(e.featureId, 'Feature ID copied');
+  $('#copySum').onclick = () => copyText(plainSummary(e), 'Summary copied');
+  $('#exportBtn').onclick = () => openExport(e);
+  if ($('#stopBtn')) $('#stopBtn').onclick = () => stopPanel(e);
+  if ($('#rollBtn')) $('#rollBtn').onclick = () => { e.rollout = 100; e.log.push({ when: TODAY_ISO, text: `${V.tname} rolled out to 100%` }); save(); toast(`${V.tname} rolled out to 100%`); render(); };
+  if ($('#launchDraft')) $('#launchDraft').onclick = () => { e.status = e.start > TODAY_ISO ? 'scheduled' : 'running'; e.log.push({ when: TODAY_ISO, text: 'Draft submitted and scheduled' }); save(); toast('Experiment scheduled'); render(); };
+  $('#hlT').onchange = ev => { det.hl = ev.target.checked; $('#screens').classList.toggle('hl-off', !det.hl); };
+  $('#cform').onsubmit = ev => { ev.preventDefault(); const t = $('#ctext').value.trim(); if (!t) return; (e.comments ||= []).push({ who: 'You', when: TODAY_ISO, text: t }); save(); renderDetail(v, id); toast('Comment posted'); };
+  wireShots(e, v);
+  if (R) {
+    if ($('#tiSeg')) $('#tiSeg').onclick = ev => { const b = ev.target.closest('button'); if (!b) return; det.ti = +b.dataset.i; renderDetail(v, id); };
+    $('#chartMetric').onchange = ev => { det.metric = ev.target.value; drawScore(e, R); drawChart(e, R); };
+    $('#modeSeg').onclick = ev => { const b = ev.target.closest('button'); if (!b) return; det.mode = b.dataset.m; $$('#modeSeg button').forEach(x => x.classList.toggle('on', x === b)); drawChart(e, R); };
+    drawScore(e, R); drawChart(e, R); drawSegs(e, R, V);
+  }
+}
+function chk(ok, text, kind) {
+  const k = kind || (ok ? 'ok' : 'bad');
+  const ic = k === 'ok' ? ICON.check : k === 'bad' ? ICON.x : k === 'info' ? ICON.info : ICON.warn;
+  const col = { ok: 'var(--good)', bad: 'var(--bad)', info: 'var(--info)', warn: 'var(--flat)' }[k];
+  return `<div class="check"><span style="color:${col}">${ic}</span><span>${esc(text)}</span></div>`;
+}
+function splitTable(e, R) {
+  return `<div class="tbl-wrap"><table><thead><tr><th>Variant</th><th class="r">Planned</th><th class="r">Actual</th><th class="r">Users</th></tr></thead><tbody>
+  ${e.variants.map((vv, i) => { const a = R.counts[i] / R.enrolled * 100; const off = Math.abs(a - vv.split) > .3; return `<tr><td><b>${esc(vv.name)}</b><div class="muted" style="font-size:12px">${esc(vv.desc || '')}</div></td><td class="r num">${vv.split}%</td><td class="r num ${off && R.srm ? 'down' : ''}">${a.toFixed(2)}%</td><td class="r num">${fmtInt(R.counts[i])}</td></tr>`; }).join('')}
+  </tbody></table></div>
+  <div class="note ${R.srm ? 'bad' : 'ok'}" style="margin-top:12px">${R.srm ? ICON.warn : ICON.check}<span>${R.srm ? `Sample ratio mismatch detected (chi-square p ${fmtP(R.srmP)}). Results may be biased.` : `No sample ratio mismatch (chi-square p = ${R.srmP.toFixed(2)}).`}</span></div>`;
+}
+function drawScore(e, R) {
+  const res = R.treat[det.ti];
+  const max = Math.max(.02, ...e.metrics.map(m => Math.max(Math.abs(res[m.id].lo), Math.abs(res[m.id].hi)))) * 1.1;
+  const W = 200, sx = x => (x + max) / (2 * max) * W;
+  const roles = ['primary', 'secondary', 'guardrail'];
+  const rows = roles.flatMap(role => e.metrics.filter(m => m.role === role).map(m => ({ m, role })));
+  $('#scorecard').innerHTML = `<table><thead><tr><th>Metric</th><th class="r">Control</th><th class="r">${esc(e.variants[det.ti + 1].name)}</th><th class="r">Lift</th><th style="min-width:210px">95% CI <span style="text-transform:none;letter-spacing:0;font-weight:400">(${pct(-max, 0)} to ${pct(max, 0)})</span></th><th class="r">p-value</th><th>Result</th></tr></thead><tbody>
+  ${rows.map(({ m, role }) => {
+    const md = M(m.id), r = res[m.id];
+    const col = r.sig ? (r.good ? 'var(--good)' : 'var(--bad)') : 'var(--muted)';
+    const tag = r.sig ? (r.good ? `<span class="sigtag v-success">${role === 'guardrail' ? 'Improved' : 'Win'}</span>` : `<span class="sigtag v-failure">${role === 'guardrail' ? 'Breached' : 'Loss'}</span>`) : `<span class="sigtag v-pending">Not sig.</span>`;
+    return `<tr class="click ${det.metric === m.id ? 'sel' : ''}" data-m="${m.id}"><td><div style="font-weight:600">${esc(md.name)}</div><div class="role">${role}${md.dir < 0 ? ' · lower is better' : ''}</div></td>
+    <td class="r num">${fmtVal(md, r.c)}</td><td class="r num">${fmtVal(md, r.t)}</td><td class="r liftcell" style="color:${col};font-weight:600">${pct(r.lift, 2)}</td>
+    <td class="forest"><svg viewBox="0 0 ${W} 22" preserveAspectRatio="none" aria-label="CI ${pct(r.lo)} to ${pct(r.hi)}"><line x1="${sx(0)}" x2="${sx(0)}" y1="0" y2="22" stroke="var(--line)" stroke-width="1.5"/><line x1="${sx(r.lo)}" x2="${sx(r.hi)}" y1="11" y2="11" stroke="${col}" stroke-width="4" stroke-linecap="round" opacity=".45"/><circle cx="${sx(r.lift)}" cy="11" r="4.5" fill="${col}" stroke="var(--surface)" stroke-width="2"/></svg><div class="muted mono" style="font-size:11px">${pct(r.lo)} to ${pct(r.hi)}</div></td>
+    <td class="r num mono">${fmtP(r.p)}</td><td>${tag}</td></tr>`;
+  }).join('')}</tbody></table>`;
+  $$('#scorecard tr.click').forEach(tr => tr.onclick = () => { det.metric = tr.dataset.m; $('#chartMetric').value = det.metric; drawScore(e, R); drawChart(e, R); });
+}
+function drawChart(e, R) {
+  const md = M(det.metric), r = R.treat[det.ti][det.metric], S = r.series;
+  const box = $('#chart'); const W = Math.max(300, box.clientWidth || 700), H = 260, pl = 54, pr = 16, pt = 14, pb = 30;
+  const tname = e.variants[det.ti + 1].name;
+  $('#chartTitle').textContent = det.mode === 'lift' ? `Cumulative lift · ${md.name}` : `${md.name} · control vs ${tname}`;
+  $('#chartSub').textContent = det.mode === 'lift' ? 'The shaded band is the 95% confidence interval. It narrows as more users enrol.' : 'Daily cumulative value for each group.';
+  let ys, lines;
+  if (det.mode === 'lift') ys = S.flatMap(s => [s.lo, s.hi, 0]);
+  else ys = S.flatMap(s => [s.c, s.t]);
+  let y0 = Math.min(...ys), y1 = Math.max(...ys); const padY = (y1 - y0) * .08 || .01; y0 -= padY; y1 += padY;
+  // nice ticks
+  const step = niceStep((y1 - y0) / 4); const t0 = Math.ceil(y0 / step) * step; const ticks = []; for (let t = t0; t <= y1 + 1e-12; t += step) ticks.push(t);
+  const X = k => pl + (S.length === 1 ? (W - pl - pr) / 2 : (k - 1) / (S.length - 1) * (W - pl - pr));
+  const Y = y => pt + (1 - (y - y0) / (y1 - y0)) * (H - pt - pb);
+  const fy = y => det.mode === 'lift' ? pct(y, Math.abs(step) < .01 ? 1 : 0) : fmtVal(md, y);
+  const path = (f) => S.map((s, i) => `${i ? 'L' : 'M'}${X(s.k).toFixed(1)},${Y(f(s)).toFixed(1)}`).join('');
+  const xt = []; const every = Math.max(1, Math.ceil(S.length / 7)); for (let k = 1; k <= S.length; k += every) xt.push(k);
+  let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc($('#chartTitle').textContent)}">`;
+  ticks.forEach(t => svg += `<line x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)" stroke-width="1" ${Math.abs(t) < 1e-9 && det.mode === 'lift' ? '' : 'stroke-dasharray="2 4"'}/><text x="${pl - 8}" y="${Y(t) + 4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--f-mono)">${fy(t)}</text>`);
+  xt.forEach(k => svg += `<text x="${X(k)}" y="${H - 8}" text-anchor="middle" font-size="11" fill="var(--muted)">${fmtD(addDays(e.start, k - 1))}</text>`);
+  if (det.mode === 'lift') {
+    const col = r.sig ? (r.good ? 'var(--good)' : 'var(--bad)') : 'var(--trt)';
+    const band = S.map((s, i) => `${i ? 'L' : 'M'}${X(s.k).toFixed(1)},${Y(s.hi).toFixed(1)}`).join('') + S.slice().reverse().map(s => `L${X(s.k).toFixed(1)},${Y(s.lo).toFixed(1)}`).join('') + 'Z';
+    if (y0 < 0 && y1 > 0) svg += `<line x1="${pl}" x2="${W - pr}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--ink-2)" stroke-width="1.2"/>`;
+    svg += `<path d="${band}" fill="${col}" opacity=".16"/><path d="${path(s => s.lift)}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round"/>`;
+    const L = S[S.length - 1]; svg += `<circle cx="${X(L.k)}" cy="${Y(L.lift)}" r="4.5" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`;
+    $('#chartLegend').innerHTML = `<span><i style="background:${col}"></i>${esc(tname)} vs control</span><span><i class="band" style="background:${col}"></i>95% confidence interval</span><span><i style="background:var(--ink-2);height:1.5px"></i>No change</span>`;
+  } else {
+    svg += `<path d="${path(s => s.c)}" fill="none" stroke="var(--ctrl)" stroke-width="2" stroke-dasharray="5 3"/><path d="${path(s => s.t)}" fill="none" stroke="var(--trt)" stroke-width="2"/>`;
+    const L = S[S.length - 1]; svg += `<circle cx="${X(L.k)}" cy="${Y(L.t)}" r="4.5" fill="var(--trt)" stroke="var(--surface)" stroke-width="2"/><circle cx="${X(L.k)}" cy="${Y(L.c)}" r="4.5" fill="var(--ctrl)" stroke="var(--surface)" stroke-width="2"/>`;
+    $('#chartLegend').innerHTML = `<span><i style="background:var(--ctrl)"></i>Control</span><span><i style="background:var(--trt)"></i>${esc(tname)}</span>`;
+  }
+  svg += `<line id="xh" x1="0" x2="0" y1="${pt}" y2="${H - pb}" stroke="var(--ink-2)" stroke-width="1" visibility="hidden"/><rect x="${pl}" y="0" width="${W - pl - pr}" height="${H}" fill="transparent" id="hov"/></svg><div class="tip" id="tip" hidden></div>`;
+  box.innerHTML = svg;
+  const hov = $('#hov', box), tip = $('#tip', box), xh = $('#xh', box);
+  const show = cx => {
+    const k = Math.max(1, Math.min(S.length, Math.round((cx - pl) / (W - pl - pr) * (S.length - 1)) + 1)); const s = S[k - 1];
+    xh.setAttribute('x1', X(k)); xh.setAttribute('x2', X(k)); xh.setAttribute('visibility', 'visible');
+    tip.hidden = false;
+    tip.innerHTML = `<b>Day ${k}</b> · ${fmtD(addDays(e.start, k - 1))}<br>` + (det.mode === 'lift' ? `Lift <b>${pct(s.lift, 2)}</b><br>95% CI ${pct(s.lo)} to ${pct(s.hi)}` : `Control <b>${fmtVal(md, s.c)}</b><br>${esc(tname)} <b>${fmtVal(md, s.t)}</b>`);
+    const tx = X(k) + 12 + tip.offsetWidth > W ? X(k) - tip.offsetWidth - 12 : X(k) + 12;
+    tip.style.left = tx + 'px'; tip.style.top = '20px';
+  };
+  hov.addEventListener('pointermove', ev => { const b = box.getBoundingClientRect(); show((ev.clientX - b.left) * (W / b.width)); });
+  hov.addEventListener('pointerleave', () => { tip.hidden = true; xh.setAttribute('visibility', 'hidden'); });
+}
+function niceStep(raw) { const p = Math.pow(10, Math.floor(Math.log10(Math.abs(raw) || 1e-6))); const n = raw / p; return (n < 1.5 ? 1 : n < 3 ? 2 : n < 7 ? 5 : 10) * p; }
+function drawSegs(e, R, V) {
+  const r = R.treat[det.ti][V.prim.id], md = V.pmd;
+  const r0 = rng(hash(e.id + 'segs' + det.ti));
+  const mk = (name, share) => { const k = 1 / Math.sqrt(share); const lift = r.lift + gauss(r0) * (r.hi - r.lo) / 3.92 * k * .9; const hw = (r.hi - r.lo) / 2 * k; return { name, lift, lo: lift - hw, hi: lift + hw }; };
+  const tp = e.platforms.reduce((a, p) => a + PLATFORMS.find(x => x.id === p).dau, 0);
+  const tg = e.geos.reduce((a, g) => a + (GEOS.find(x => x.id === g)?.share || .05), 0);
+  const groups = [['Platform', e.platforms.map(p => { const P = PLATFORMS.find(x => x.id === p); return mk(P.name, P.dau / tp); })], ['Country', e.geos.map(g => { const G = GEOS.find(x => x.id === g); return mk(G?.name || g, (G?.share || .05) / tg); })]];
+  const all = groups.flatMap(g => g[1]); const max = Math.max(...all.map(s => Math.max(Math.abs(s.lo), Math.abs(s.hi)))) * 1.1;
+  const W = 200, sx = x => (x + max) / (2 * max) * W;
+  $('#segs').innerHTML = groups.map(([g, segs]) => `<div class="eyebrow" style="margin:6px 0">${g}</div>` + segs.map(s => {
+    const sig = s.lo > 0 || s.hi < 0, good = s.lift * md.dir > 0; const col = sig ? (good ? 'var(--good)' : 'var(--bad)') : 'var(--muted)';
+    return `<div style="display:grid;grid-template-columns:110px minmax(0,1fr) 64px;gap:10px;align-items:center;padding:4px 0"><span style="font-size:13px">${esc(s.name)}</span><svg viewBox="0 0 ${W} 18" preserveAspectRatio="none" style="width:100%;height:18px"><line x1="${sx(0)}" x2="${sx(0)}" y1="0" y2="18" stroke="var(--line)" stroke-width="1.5"/><line x1="${sx(s.lo)}" x2="${sx(s.hi)}" y1="9" y2="9" stroke="${col}" stroke-width="4" stroke-linecap="round" opacity=".45"/><circle cx="${sx(s.lift)}" cy="9" r="4" fill="${col}"/></svg><span class="mono r" style="color:${col};font-size:12px">${pct(s.lift)}</span></div>`;
+  }).join('')).join('') + `<p class="muted" style="font-size:12px;margin-top:8px">Segments have smaller samples, so their intervals are wider. Treat differences as leads to follow up, not conclusions.</p>`;
+}
+function setupDl(e) {
+  const roles = ['primary', 'secondary', 'guardrail'];
+  return `<div class="review"><dl>
+    <dt>Feature ID</dt><dd class="mono">${esc(e.featureId)}</dd>
+    <dt>Variants</dt><dd>${e.variants.map(v => `<div><b>${esc(v.name)}</b> · ${v.split}% <span class="muted">${esc(v.desc || '')}</span></div>`).join('')}</dd>
+    <dt>Target users</dt><dd class="num">${fmtInt(e.users)} at ${e.traffic}% of eligible traffic</dd>
+    <dt>Targeting</dt><dd>${esc(e.targeting || 'All users')}${e.holdout ? ' · 5% global holdout excluded' : ''}</dd>
+    <dt>Mutual exclusion</dt><dd>${esc(e.layer || 'None')}</dd>
+    <dt>Statistics</dt><dd>Frequentist, two-sided, 95% confidence${e.cuped ? ' · CUPED variance reduction' : ''}${e.sequential ? ' · Sequential testing' : ''}</dd>
+    ${roles.map(role => { const ms = e.metrics.filter(m => m.role === role); return ms.length ? `<dt style="text-transform:capitalize">${role} metric${ms.length > 1 ? 's' : ''}</dt><dd>${ms.map(m => { const md = M(m.id); return `<div>${esc(md.name)} <span class="tag-src ${md.src === 'adobe' ? 'adobe' : md.src === 'custom' ? 'custom' : ''}">${md.src === 'adobe' ? 'Adobe' : md.src === 'custom' ? 'Custom' : 'Native'}</span><div class="mono muted" style="font-size:11.5px">${esc(md.formula)}</div></div>`; }).join('')}</dd>` : ''; }).join('')}
+  </dl></div>`;
+}
+const initials = n => n.split(' ').map(x => x[0]).slice(0, 2).join('').toUpperCase();
+function commentHTML(c) { return `<div class="comment"><div class="av">${esc(initials(c.who))}</div><div><div style="font-size:13px"><b>${esc(c.who)}</b> <span class="muted">${fmtD(c.when)}</span></div><p style="font-size:13.5px">${esc(c.text)}</p></div></div>`; }
+
+/* screens + pins */
+function shotCol(e, side) {
+  const notes = (e.notes?.[side]) || [];
+  const img = e.images?.[side];
+  const label = side === 'before' ? 'Before · control' : `After · ${esc(e.variants[1]?.name || 'variant')}`;
+  return `<div class="shotcol"><h3>${side === 'after' ? `<span class="pill v-trend">Changed</span>` : `<span class="pill st-completed">Current</span>`} ${label}</h3>
+   <div class="shotwrap"><div class="shot ${det.adding === side ? 'adding' : ''}" data-side="${side}">${img ? `<img class="up" src="${img}" alt="${side} screen">` : screen(e.tpl, side, e)}
+   ${notes.map((n, i) => `<span class="pinm" style="left:${n.x}%;top:${n.y}%" title="${esc(n.t)}">${i + 1}</span>`).join('')}
+   ${det.pending && det.pending.side === side ? `<span class="pinm pending" style="left:${det.pending.x}%;top:${det.pending.y}%">${notes.length + 1}</span>` : ''}
+   </div></div>
+   <ul class="notes">${notes.map((n, i) => `<li><span class="n">${i + 1}</span><span>${esc(n.t)}${n.who ? `<div class="who">${esc(n.who)}</div>` : ''}</span><button class="btn ghost sm" type="button" data-del="${side}:${i}" aria-label="Remove note ${i + 1}">${ICON.x.replace('<svg', '<svg width="12" height="12"')}</button></li>`).join('') || `<li class="muted" style="display:block">No notes on this screen yet.</li>`}</ul>
+   ${det.pending && det.pending.side === side ? `<form class="stack pinform" style="gap:8px"><textarea id="pinText" placeholder="What changed here, and why?" aria-label="Note text"></textarea><div class="row"><button class="btn pri sm" type="submit">Save note</button><button class="btn sm" type="button" data-cancel>Cancel</button></div></form>`
+      : `<div class="row"><button class="btn sm" type="button" data-add="${side}">${ICON.pin} ${det.adding === side ? 'Click the screen to place a pin' : 'Add note'}</button>
+      <label class="btn sm" style="cursor:pointer">Upload screenshot<input type="file" accept="image/*" data-up="${side}" hidden></label></div>`}
+  </div>`;
+}
+function wireShots(e, v) {
+  const box = $('#screens');
+  box.onclick = ev => {
+    const add = ev.target.closest('[data-add]'); if (add) { det.adding = det.adding === add.dataset.add ? null : add.dataset.add; det.pending = null; rerenderShots(e, v); return; }
+    const del = ev.target.closest('[data-del]'); if (del) { const [s, i] = del.dataset.del.split(':'); e.notes[s].splice(+i, 1); save(); rerenderShots(e, v); return; }
+    if (ev.target.closest('[data-cancel]')) { det.pending = null; rerenderShots(e, v); return; }
+    const shot = ev.target.closest('.shot.adding');
+    if (shot) { const b = shot.getBoundingClientRect(); det.pending = { side: shot.dataset.side, x: +((ev.clientX - b.left) / b.width * 100).toFixed(1), y: +((ev.clientY - b.top) / b.height * 100).toFixed(1) }; det.adding = null; rerenderShots(e, v); setTimeout(() => $('#pinText')?.focus(), 0); }
+  };
+  box.onsubmit = ev => { ev.preventDefault(); const t = $('#pinText').value.trim(); if (!t) return; e.notes ||= { before: [], after: [] }; (e.notes[det.pending.side] ||= []).push({ x: det.pending.x, y: det.pending.y, t, who: 'You · ' + fmtD(TODAY_ISO) }); det.pending = null; save(); rerenderShots(e, v); toast('Note added'); };
+  box.onchange = ev => { const inp = ev.target.closest('[data-up]'); if (!inp || !inp.files[0]) return; readImg(inp.files[0], url => { e.images ||= {}; e.images[inp.dataset.up] = url; save(); rerenderShots(e, v); toast('Screenshot added'); }); };
+}
+function rerenderShots(e, v) { $('#screens').innerHTML = ['before', 'after'].map(s => shotCol(e, s)).join(''); }
+function readImg(file, cb) {
+  const fr = new FileReader(); fr.onload = () => { const im = new Image(); im.onload = () => { const s = Math.min(1, 520 / im.width); const c = document.createElement('canvas'); c.width = im.width * s; c.height = im.height * s; c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); cb(c.toDataURL('image/jpeg', .82)); }; im.src = fr.result; }; fr.readAsDataURL(file);
+}
+
+/* stop */
+function stopPanel(e) {
+  const p = $('#stopPanel');
+  p.innerHTML = `<div class="card" style="border-color:var(--bad)"><h3 style="margin-bottom:10px">Stop this experiment?</h3><div class="fgrid">
+    <label class="f">Reason<select id="stopR"><option>Guardrail breach</option><option>Bug or broken variant</option><option>Business priority changed</option><option>Clear result reached early</option></select></label>
+    <label class="f">Traffic after stopping<select id="stopT"><option>Send everyone to control</option><option>Send everyone to the winning variant</option></select></label></div>
+    <p class="muted" style="margin:10px 0">Everyone currently in the experiment will see the option you choose. Results are frozen at today's data.</p>
+    <div class="row"><button class="btn danger" type="button" id="stopGo">Stop experiment</button><button class="btn" type="button" id="stopNo">Keep running</button></div></div>`;
+  $('#stopNo').onclick = () => p.innerHTML = '';
+  $('#stopGo').onclick = () => { e.status = 'terminated'; e.stoppedOn = TODAY_ISO; e.stopReason = $('#stopR').value + '. ' + $('#stopT').value + '.'; e.log.push({ when: TODAY_ISO, text: 'Stopped early. ' + e.stopReason }); save(); toast('Experiment stopped'); render(); };
+}
+
+/* ---------- export & share ---------- */
+async function copyText(t, msg) {
+  try { await navigator.clipboard.writeText(t); toast(msg); }
+  catch (err) { showModal(`<h2>Copy this text</h2><pre id="cpx">${esc(t)}</pre><div class="row"><button class="btn" type="button" data-close>Close</button></div>`); const r = document.createRange(); r.selectNodeContents($('#cpx')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+}
+function plainSummary(e) {
+  const R = compute(e), V = verdict(e, R);
+  const lines = [`${e.name} (${e.featureId})`, `Status: ${STATUS_LABEL[e.status]}${R ? ' · ' + V.label : ''}`, `Owner: ${e.owner}, ${e.team}`, `Dates: ${fmtDY(e.start)} – ${fmtDY(e.end)}`, '', ...summaryText(e, R, V)];
+  if (R) { lines.push('', 'Metrics (' + e.variants[V.best + 1].name + ' vs control):'); e.metrics.forEach(m => { const r = R.treat[V.best][m.id]; lines.push(`• ${M(m.id).name} [${m.role}]: ${pct(r.lift, 2)} (95% CI ${pct(r.lo)} to ${pct(r.hi)}, p ${fmtP(r.p)})`); }); }
+  return lines.join('\n');
+}
+function csvOf(e) {
+  const R = compute(e); const rows = [['experiment', 'feature_id', 'variant', 'metric', 'role', 'category', 'control', 'treatment', 'relative_lift', 'ci_low', 'ci_high', 'p_value', 'significant']];
+  if (R) R.treat.forEach((res, i) => e.metrics.forEach(m => { const r = res[m.id], md = M(m.id); rows.push([e.name, e.featureId, e.variants[i + 1].name, md.name, m.role, md.cat, r.c.toFixed(5), r.t.toFixed(5), r.lift.toFixed(5), r.lo.toFixed(5), r.hi.toFixed(5), r.p.toFixed(5), r.sig]); }));
+  return rows.map(r => r.map(x => /[",\n]/.test(String(x)) ? `"${String(x).replace(/"/g, '""')}"` : x).join(',')).join('\n');
+}
+function reportHTML(e) {
+  const R = compute(e), V = verdict(e, R), c = verdictClass(V);
+  const col = { success: '#1d7a3e', failure: '#b4271b', flat: '#8f6400', trend: '#2453c4', pending: '#6f7b8b' }[c];
+  const P = summaryText(e, R, V);
+  const rowsT = R ? e.metrics.map(m => { const r = R.treat[V.best][m.id], md = M(m.id); return `<tr><td>${esc(md.name)}<br><small>${m.role}</small></td><td>${fmtVal(md, r.c)}</td><td>${fmtVal(md, r.t)}</td><td style="color:${r.sig ? (r.good ? '#1d7a3e' : '#b4271b') : '#555'}"><b>${pct(r.lift, 2)}</b></td><td>${pct(r.lo)} to ${pct(r.hi)}</td><td>${fmtP(r.p)}</td></tr>`; }).join('') : '';
+  const notes = s => (e.notes?.[s] || []).map((n, i) => `<li>${esc(n.t)}</li>`).join('') || '<li>None</li>';
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${esc(e.name)} · experiment report</title><style>body{font-family:system-ui,sans-serif;max-width:820px;margin:40px auto;padding:0 20px;color:#141a21;line-height:1.5}h1{margin:0 0 4px}table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border-bottom:1px solid #ddd;padding:8px;text-align:left;font-size:14px}th{font-size:12px;text-transform:uppercase;color:#666}.v{display:inline-block;padding:6px 14px;border-radius:999px;color:#fff;background:${col};font-weight:700}.m{color:#666;font-size:14px}code{background:#f0f2f4;padding:1px 5px;border-radius:4px}</style></head><body>
+  <p class="m">Splitlab experiment report · exported ${fmtDY(TODAY_ISO)}</p><h1>${esc(e.name)}</h1><p class="m"><code>${esc(e.featureId)}</code> · ${esc(e.owner)}, ${esc(e.team)} · ${fmtDY(e.start)} – ${fmtDY(e.end)} · ${STATUS_LABEL[e.status]}</p>
+  <p><span class="v">${esc(V.label)}</span></p><h2>Summary</h2>${P.map(p => `<p>${esc(p)}</p>`).join('')}
+  <h2>Hypothesis</h2><p>${esc(e.hypothesis)}</p>
+  ${R ? `<h2>Metrics · ${esc(e.variants[V.best + 1].name)} vs control</h2><table><tr><th>Metric</th><th>Control</th><th>Variant</th><th>Lift</th><th>95% CI</th><th>p</th></tr>${rowsT}</table>` : ''}
+  <h2>Setup</h2><table><tr><td>Variants</td><td>${e.variants.map(v => `${esc(v.name)} (${v.split}%): ${esc(v.desc || '')}`).join('<br>')}</td></tr><tr><td>Platforms</td><td>${e.platforms.map(p => PLATFORMS.find(x => x.id === p).name).join(', ')}</td></tr><tr><td>Geography</td><td>${e.geos.map(g => GEOS.find(x => x.id === g)?.name || g).join(', ')}</td></tr><tr><td>Users</td><td>${fmtInt(e.users)} at ${e.traffic}% traffic</td></tr></table>
+  <h2>What changed</h2><p><b>Before</b></p><ol>${notes('before')}</ol><p><b>After</b></p><ol>${notes('after')}</ol>
+  ${(e.comments || []).length ? `<h2>Discussion</h2>${e.comments.map(c => `<p><b>${esc(c.who)}</b> (${fmtD(c.when)}): ${esc(c.text)}</p>`).join('')}` : ''}
+  </body></html>`;
+}
+let downloadsNS;
+(async () => { try { downloadsNS = await window.claude?.use?.('downloads'); } catch (err) { downloadsNS = null; } })();
+function openExport(e) {
+  const slug = e.featureId.replace(/[^a-z0-9_]/gi, '_');
+  const opts = [
+    { k: 'html', name: 'Shareable report', d: 'One-page report anyone can open in a browser.', file: `${slug}_report.html`, make: () => reportHTML(e) },
+    { k: 'csv', name: 'Metrics table', d: 'Every metric and variant, for Excel or Sheets.', file: `${slug}_metrics.csv`, make: () => csvOf(e) },
+    { k: 'json', name: 'Experiment config', d: 'Full setup for engineering or another tool.', file: `${slug}.json`, make: () => JSON.stringify({ ...e, images: undefined, log: undefined }, null, 2) },
+    { k: 'md', name: 'Summary for Slack or email', d: 'Plain-text summary with the verdict.', file: `${slug}_summary.md`, make: () => plainSummary(e) }
+  ];
+  showModal(`<div><h2>Export or share</h2><p class="muted">Download a file to share with anyone in the organisation.</p></div>
+    <div class="stack" style="gap:8px">${opts.map(o => `<div class="row between" style="border:1px solid var(--line);border-radius:10px;padding:12px"><div style="min-width:0;flex:1"><b>${o.name}</b><div class="muted" style="font-size:12.5px">${o.d} <span class="mono">${o.file}</span></div></div><div class="row" style="gap:6px"><button class="btn sm" type="button" data-copy="${o.k}">${ICON.copy} Copy</button><button class="btn pri sm" type="button" data-dl="${o.k}">${ICON.dl} Download</button></div></div>`).join('')}</div>
+    <p class="muted" id="dlNote" style="font-size:12.5px"></p>
+    <div class="row"><button class="btn" type="button" data-close>Done</button></div>`);
+  const m = $('#modalRoot');
+  m.onclick = async ev => {
+    if (ev.target.closest('[data-close]') || ev.target.classList.contains('modal-bg')) { closeModal(); return; }
+    const c = ev.target.closest('[data-copy]'); if (c) { const o = opts.find(x => x.k === c.dataset.copy); copyText(o.make(), o.name + ' copied'); return; }
+    const d = ev.target.closest('[data-dl]'); if (d) {
+      const o = opts.find(x => x.k === d.dataset.dl);
+      if (!downloadsNS) { $('#dlNote').textContent = 'Downloads are not available in this view. Use Copy instead.'; return; }
+      try { await downloadsNS.save({ filename: o.file, data: o.make() }); toast('Saved ' + o.file); }
+      catch (err) { if (err?.code === 'declined') return; $('#dlNote').textContent = err?.code === 'rate_limited' ? 'A save prompt is already open.' : 'That download did not work here. Use Copy instead.'; }
+    }
+  };
+}
+function showModal(html) { $('#modalRoot').innerHTML = `<div class="modal-bg"><div class="modal" role="dialog" aria-modal="true">${html}</div></div>`; $('#modalRoot').onclick = ev => { if (ev.target.closest('[data-close]') || ev.target.classList.contains('modal-bg')) closeModal(); }; }
+function closeModal() { $('#modalRoot').innerHTML = ''; $('#modalRoot').onclick = null; }
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && $('#modalRoot').innerHTML) closeModal(); });
+
+/* ---------- Adobe Analytics (mock) ---------- */
+function openAdobe(onImport) {
+  const step = (html) => showModal(`<div class="row" style="gap:12px"><div class="aa-logo">Aa</div><div><h2>Adobe Analytics</h2><p class="muted" style="font-size:12.5px">Use your Adobe report suites as experiment metrics. Prototype: the connection is simulated.</p></div></div>${html}`);
+  const pick = () => {
+    const have = new Set(metrics.map(m => m.id));
+    step(`<label class="f">Report suite<select id="aaSuite">${AA_SUITES.map(s => `<option value="${s.id}" ${adobe.suite === s.id ? 'selected' : ''}>${s.name} · ${s.id}</option>`).join('')}</select></label>
+      <div><div class="eyebrow" style="margin-bottom:6px">Calculated metrics in this suite</div><div class="stack" style="gap:6px">${AA_METRICS.map(a => `<label class="toggle" style="justify-content:space-between;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-weight:400"><span><input type="checkbox" value="${a.id}" ${have.has(a.id) ? 'checked disabled' : ''}> <b>${a.name}</b><div class="mono muted" style="font-size:11.5px;margin-left:24px">${a.formula}</div></span><span class="chip">${a.cat}</span></label>`).join('')}</div></div>
+      <div class="row between"><button class="btn ghost sm danger" type="button" id="aaDisc">Disconnect</button><div class="row"><button class="btn" type="button" data-close>Cancel</button><button class="btn pri" type="button" id="aaImp">Import selected</button></div></div>`);
+    $('#aaDisc').onclick = () => { adobe = { connected: false, suite: null }; save(); renderAAStatus(); closeModal(); toast('Adobe Analytics disconnected'); };
+    $('#aaImp').onclick = () => {
+      const ids = $$('.modal input[type=checkbox]:checked:not(:disabled)').map(i => i.value);
+      adobe.suite = $('#aaSuite').value;
+      ids.forEach(id => { const a = AA_METRICS.find(x => x.id === id); metrics.push({ ...a, unit: a.unit || '%', src: 'adobe', suite: adobe.suite }); });
+      save(); closeModal(); toast(ids.length ? `Imported ${ids.length} metric${ids.length > 1 ? 's' : ''} from Adobe Analytics` : 'No new metrics selected');
+      if (onImport) onImport(ids); else render();
+    };
+  };
+  if (adobe.connected) return pick();
+  step(`<div class="note info">${ICON.info}<span>Splitlab reads metric definitions and daily totals. It never changes your Adobe setup.</span></div>
+    <label class="f">Adobe organisation<input type="text" id="aaOrg" value="Acme Corp · 8F2A1C@AdobeOrg"></label>
+    <div class="row"><button class="btn" type="button" data-close>Cancel</button><button class="btn pri" type="button" id="aaGo">Sign in with Adobe</button></div>`);
+  $('#aaGo').onclick = () => {
+    $('#aaGo').innerHTML = '<span class="spinner"></span> Connecting'; $('#aaGo').disabled = true;
+    setTimeout(() => { adobe.connected = true; adobe.suite = AA_SUITES[0].id; save(); renderAAStatus(); pick(); }, 1100);
+  };
+}
+
+/* ---------- metrics library ---------- */
+function renderMetrics(v) {
+  v.innerHTML = `<div class="stack" style="gap:20px">
+    <div class="row between"><div><div class="eyebrow">Shared definitions</div><h1>Metrics library</h1><p class="muted" style="margin-top:4px;max-width:70ch">Every experiment picks from this list, so a metric means the same thing in every test.</p></div>
+    <div class="row"><button class="btn" type="button" id="mAA"><span class="aa-logo" style="width:18px;height:18px;font-size:9px;border-radius:4px">Aa</span> ${adobe.connected ? 'Import from Adobe' : 'Connect Adobe Analytics'}</button><button class="btn pri" type="button" id="mNew">${ICON.plus} New metric</button></div></div>
+    ${CATS.map(c => { const ms = metrics.filter(m => m.cat === c); return `<div class="card flush"><div style="padding:14px 16px;border-bottom:1px solid var(--line)"><h2>${c} metrics</h2><p class="muted" style="font-size:12.5px">${CAT_HINT[c]}</p></div><div class="tbl-wrap"><table><thead><tr><th>Metric</th><th>Formula</th><th>Type</th><th>Better when</th><th>Source</th><th class="r">Used in</th></tr></thead><tbody>
+      ${ms.map(m => { const used = exps.filter(e => e.metrics.some(x => x.id === m.id)).length; return `<tr><td><b>${esc(m.name)}</b></td><td class="mono ink2" style="font-size:12px">${esc(m.formula)}</td><td>${m.type === 'rate' ? 'Rate' : 'Average'}</td><td>${m.dir > 0 ? `<span class="up">${ICON.up.replace('<svg', '<svg width="14" height="14" style="vertical-align:-2px"')} Higher</span>` : `<span class="down">${ICON.down.replace('<svg', '<svg width="14" height="14" style="vertical-align:-2px"')} Lower</span>`}</td><td><span class="tag-src ${m.src === 'adobe' ? 'adobe' : m.src === 'custom' ? 'custom' : ''}">${m.src === 'adobe' ? 'Adobe Analytics' : m.src === 'custom' ? 'Custom' : 'Native events'}</span></td><td class="r num">${used} exp.</td></tr>`; }).join('')}
+    </tbody></table></div></div>`; }).join('')}
+  </div>`;
+  $('#mAA').onclick = () => openAdobe();
+  $('#mNew').onclick = () => openMetricBuilder(() => render());
+}
+function openMetricBuilder(onSave) {
+  showModal(`<div><h2>New metric</h2><p class="muted" style="font-size:12.5px">Define it once; anyone can then add it to an experiment.</p></div>
+    <div class="fgrid">
+      <label class="f full">Metric name<input type="text" id="nmName" placeholder="e.g. Wishlist add rate"></label>
+      <label class="f">Category<select id="nmCat">${CATS.map(c => `<option>${c}</option>`).join('')}</select></label>
+      <label class="f">Better when<select id="nmDir"><option value="1">Higher</option><option value="-1">Lower</option></select></label>
+      <label class="f">Type<select id="nmType"><option value="rate">Rate (per user or per event)</option><option value="mean">Average value</option></select></label>
+      <label class="f">Expected baseline<input type="number" id="nmBase" value="5" step="any"><span class="hint">Percent for rates, a value for averages</span></label>
+      <label class="f full">Formula<textarea id="nmF" class="mono" placeholder="add_to_wishlist / unique_users" style="min-height:56px"></textarea><span class="hint">Click events and operators to build it. Use count(), sum() or avg() around events.</span></label>
+      <div class="full tokens">${EVENTS.map(x => `<button type="button" data-t="${x}">${x}</button>`).join('')}${['count(', 'sum(', 'avg(', '(', ')', '+', '−', '×', '/'].map(o => `<button type="button" class="op" data-t="${o === '−' ? '-' : o === '×' ? '*' : o}">${o}</button>`).join('')}</div>
+    </div>
+    <div id="nmErr" class="err" aria-live="polite"></div>
+    <div class="row between"><button class="btn sm" type="button" id="nmAA"><span class="aa-logo" style="width:16px;height:16px;font-size:8px;border-radius:3px">Aa</span> Use Adobe Analytics instead</button><div class="row"><button class="btn" type="button" data-close>Cancel</button><button class="btn pri" type="button" id="nmSave">Save metric</button></div></div>`);
+  const f = $('#nmF');
+  $('.modal .tokens').onclick = ev => { const b = ev.target.closest('[data-t]'); if (!b) return; const t = b.dataset.t; const s = f.selectionStart ?? f.value.length; const pre = f.value.slice(0, s), post = f.value.slice(s); const ins = (pre && !/[\s(]$/.test(pre) ? ' ' : '') + t + (/[(]$/.test(t) ? '' : ' '); f.value = pre + ins + post; f.focus(); f.selectionStart = f.selectionEnd = (pre + ins).length; };
+  $('#nmAA').onclick = () => openAdobe(ids => onSave && onSave(ids));
+  $('#nmSave').onclick = () => {
+    const name = $('#nmName').value.trim(), formula = f.value.trim();
+    const err = validateFormula(formula);
+    if (!name) return $('#nmErr').textContent = 'Give the metric a name.';
+    if (metrics.some(m => m.name.toLowerCase() === name.toLowerCase())) return $('#nmErr').textContent = 'A metric with this name already exists.';
+    if (err) return $('#nmErr').textContent = err;
+    const type = $('#nmType').value, base = parseFloat($('#nmBase').value) || 1;
+    const id = 'c_' + name.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 24) + '_' + (Date.now() % 1e5);
+    metrics.push({ id, name, cat: $('#nmCat').value, type, dir: +$('#nmDir').value, base: type === 'rate' ? Math.min(.95, base / 100) : base, sd: type === 'mean' ? base * 1.2 : undefined, unit: type === 'rate' ? '%' : 'count', formula, src: 'custom' });
+    save(); closeModal(); toast(`Saved “${name}” to the metrics library`); onSave && onSave([id]);
+  };
+}
+function validateFormula(f) {
+  if (!f) return 'Write a formula, for example add_to_cart / unique_users.';
+  if (/[^a-z0-9_\s()+\-*/.\[\]:]/i.test(f)) return 'Only events, numbers, + − × / and brackets are allowed.';
+  let d = 0; for (const ch of f) { if (ch === '(') d++; if (ch === ')') d--; if (d < 0) return 'A closing bracket has no matching opening bracket.'; }
+  if (d) return 'Brackets are not balanced.';
+  const words = (f.match(/[a-z_][a-z0-9_]*/gi) || []).filter(w => !['count', 'sum', 'avg', 'p75', 'p90'].includes(w));
+  const unknown = words.filter(w => !EVENTS.includes(w));
+  if (unknown.length) return `Unknown event: ${unknown[0]}. Pick events from the list below.`;
+  if (/[+\-*/]\s*$/.test(f) || /^\s*[+*/]/.test(f)) return 'The formula ends or starts with an operator.';
+  return '';
+}
+
+/* ---------- wizard ---------- */
+const STEPS = ['Basics', 'Audience', 'Metrics', 'What changes', 'Schedule', 'Review'];
+let wz = null;
+function blankDraft() {
+  return { step: 0, done: [], name: '', featureId: '', fidTouched: false, team: 'Growth', owner: 'You', hypothesis: '', tags: '',
+    platforms: ['ios', 'android'], geos: ['IN', 'US'], users: 200000, traffic: 20, targeting: 'All users', holdout: true, layer: 'None',
+    variants: [{ name: 'Control', split: 50, desc: 'Current experience' }, { name: 'Variant B', split: 50, desc: '' }],
+    metrics: [], tpl: 'generic', images: {}, notes: { before: [], after: [] }, changeDesc: '',
+    start: addDays(TODAY_ISO, 3), end: addDays(TODAY_ISO, 31), mde: 3, alpha: '0.05', power: '0.8', cuped: true, sequential: false, autostop: true, reviewer: 'Experiment Review board' };
+}
+function renderWizard(v) {
+  if (!wz) wz = store.get('draft', null) || blankDraft();
+  v.innerHTML = `<div class="stack" style="gap:20px"><div class="row between"><div><div class="eyebrow">Set up a test</div><h1>New experiment</h1></div><div class="row"><span class="muted" style="font-size:12.5px">Draft saves as you type</span><button class="btn sm" type="button" id="wzReset">Start over</button></div></div>
+  <div class="wiz"><ol class="steps" id="wzSteps">${STEPS.map((s, i) => `<li><button type="button" data-i="${i}" class="${wz.step === i ? 'on' : ''} ${wz.done.includes(i) && wz.step !== i ? 'done' : ''}"><span class="sn">${wz.done.includes(i) && wz.step !== i ? '✓' : i + 1}</span>${s}</button></li>`).join('')}</ol>
+  <div class="card" id="wzBody"></div></div></div>`;
+  $('#wzSteps').onclick = ev => { const b = ev.target.closest('button'); if (!b) return; const i = +b.dataset.i; if (i > wz.step) { for (let k = wz.step; k < i; k++) { const er = stepErrors(k); if (er.length) { wz.step = k; renderWizard(v); showErrs(er); return; } if (!wz.done.includes(k)) wz.done.push(k); } } wz.step = i; persistDraft(); renderWizard(v); };
+  $('#wzReset').onclick = () => { wz = blankDraft(); persistDraft(); renderWizard(v); };
+  const body = $('#wzBody');
+  [stepBasics, stepAudience, stepMetrics, stepDesign, stepSchedule, stepReview][wz.step](body, v);
+  if (wz.step < 5) {
+    body.insertAdjacentHTML('beforeend', `<div id="wzErr" class="stack" style="gap:6px;margin-top:16px"></div><div class="row between" style="margin-top:20px;border-top:1px solid var(--line);padding-top:16px"><button class="btn" type="button" id="wzBack" ${wz.step ? '' : 'disabled'}>Back</button><button class="btn pri" type="button" id="wzNext">Continue to ${STEPS[wz.step + 1].toLowerCase()}</button></div>`);
+    $('#wzBack').onclick = () => { wz.step--; persistDraft(); renderWizard(v); };
+    $('#wzNext').onclick = () => { const er = stepErrors(wz.step); if (er.length) return showErrs(er); if (!wz.done.includes(wz.step)) wz.done.push(wz.step); wz.step++; persistDraft(); renderWizard(v); };
+  }
+}
+function showErrs(er) { const el = $('#wzErr'); if (el) el.innerHTML = er.map(x => `<div class="note bad">${ICON.warn}<span>${esc(x)}</span></div>`).join(''); }
+function persistDraft() { const { images, ...rest } = wz; store.set('draft', rest); }
+function bind(root, onAny) {
+  $$('[data-k]', root).forEach(el => {
+    const k = el.dataset.k;
+    const h = () => { let val = el.type === 'checkbox' ? el.checked : el.type === 'number' || el.type === 'range' ? +el.value : el.value; wz[k] = val; persistDraft(); onAny && onAny(k, el); };
+    el.addEventListener(el.type === 'checkbox' || el.tagName === 'SELECT' ? 'change' : 'input', h);
+  });
+}
+const slugify = s => 'feat_' + s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 32);
+function fidError(f) {
+  if (!f) return 'Add a feature ID.';
+  if (!/^[a-z][a-z0-9_]{2,47}$/.test(f)) return 'Feature IDs use lowercase letters, numbers and underscores, and start with a letter.';
+  if (exps.some(e => e.featureId === f)) return 'This feature ID is already used by another experiment.';
+  return '';
+}
+function stepBasics(b) {
+  b.innerHTML = `<h2>Basics</h2><p class="muted" style="margin:4px 0 16px">Name the feature and say what you expect to happen.</p>
+  <div class="fgrid">
+    <label class="f">Experiment name<input type="text" data-k="name" id="w_name" value="${esc(wz.name)}" placeholder="e.g. Wishlist button on product cards"></label>
+    <label class="f">Feature ID<input type="text" class="mono" data-k="featureId" id="w_fid" value="${esc(wz.featureId)}" placeholder="feat_wishlist_card"><span class="hint" id="fidHint">Engineers use this ID in code to switch the feature on.</span></label>
+    <label class="f">Team<select data-k="team" id="w_team">${TEAMS.map(t => `<option ${wz.team === t ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+    <label class="f">Owner<input type="text" data-k="owner" id="w_owner" value="${esc(wz.owner)}"></label>
+    <label class="f full">Hypothesis<textarea data-k="hypothesis" id="w_hyp" placeholder="If we [change], then [metric] will [go up/down], because [reason].">${esc(wz.hypothesis)}</textarea><span class="hint">A clear hypothesis makes the result easy to read later.</span></label>
+  </div>`;
+  const fidHint = () => { const er = wz.featureId ? fidError(wz.featureId) : ''; $('#fidHint').innerHTML = er ? `<span class="err">${esc(er)}</span>` : wz.featureId ? '<span class="up">Available</span>' : 'Engineers use this ID in code to switch the feature on.'; };
+  bind(b, (k) => { if (k === 'name' && !wz.fidTouched) { wz.featureId = wz.name ? slugify(wz.name) : ''; $('#w_fid').value = wz.featureId; } if (k === 'featureId') wz.fidTouched = true; fidHint(); persistDraft(); });
+  fidHint();
+}
+function eligibleDaily() { const p = wz.platforms.reduce((a, id) => a + PLATFORMS.find(x => x.id === id).dau, 0); const g = wz.geos.reduce((a, id) => a + GEOS.find(x => x.id === id).share, 0); return p * Math.min(1, g); }
+function stepAudience(b, v) {
+  b.innerHTML = `<h2>Audience and traffic</h2><p class="muted" style="margin:4px 0 16px">Who sees the test, and how many people take part.</p>
+  <div class="stack" style="gap:20px">
+    <div><div class="f" style="margin-bottom:8px;font-weight:500">Platforms</div><div class="choice" id="w_plat">${PLATFORMS.map(p => `<label><input type="checkbox" value="${p.id}" ${wz.platforms.includes(p.id) ? 'checked' : ''}> ${p.name}</label>`).join('')}</div></div>
+    <div><div class="row between" style="margin-bottom:8px"><span style="font-weight:500">Geography</span><div class="row" style="gap:6px"><button class="btn sm" type="button" id="geoAll">Select all</button><button class="btn sm" type="button" id="geoNone">Clear</button></div></div><div class="choice" id="w_geo">${GEOS.map(g => `<label><input type="checkbox" value="${g.id}" ${wz.geos.includes(g.id) ? 'checked' : ''}> ${g.name}</label>`).join('')}</div></div>
+    <div class="fgrid">
+      <label class="f">Number of users in the experiment<input type="number" data-k="users" id="w_users" min="1000" step="1000" value="${wz.users}"><span class="hint" id="usersHint"></span></label>
+      <label class="f">Share of eligible traffic: <b id="trafV">${wz.traffic}%</b><input type="range" data-k="traffic" id="w_traffic" min="1" max="100" value="${wz.traffic}" style="accent-color:var(--accent)"><span class="hint">Start small for risky changes, then ramp up.</span></label>
+      <label class="f">Targeting rule<select data-k="targeting" id="w_tgt">${['All users', 'New users only', 'Returning users only', 'Logged-in users', 'App version 8.4 or later'].map(t => `<option ${wz.targeting === t ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
+      <label class="f">Mutual exclusion layer<select data-k="layer" id="w_layer">${LAYERS.map(t => `<option ${wz.layer === t ? 'selected' : ''}>${t}</option>`).join('')}</select><span class="hint" id="layerHint"></span></label>
+      <label class="toggle full"><input type="checkbox" data-k="holdout" id="w_hold" ${wz.holdout ? 'checked' : ''}> Exclude the 5% global holdout group (keeps a clean baseline for measuring all launches together)</label>
+    </div>
+    <div><div class="row between" style="margin-bottom:8px"><span style="font-weight:500">Variants and split</span><button class="btn sm" type="button" id="addVar" ${wz.variants.length >= 4 ? 'disabled' : ''}>${ICON.plus} Add variant</button></div>
+      <div class="stack" style="gap:8px" id="vars">${wz.variants.map((vv, i) => `<div class="vrow"><input type="text" value="${esc(vv.name)}" data-vi="${i}" data-vf="name" aria-label="Variant name" ${i === 0 ? 'readonly' : ''}><input class="vd" type="text" value="${esc(vv.desc)}" data-vi="${i}" data-vf="desc" placeholder="What this group sees" aria-label="Variant description"><div class="row" style="gap:4px;flex-wrap:nowrap"><input type="number" value="${vv.split}" min="1" max="99" data-vi="${i}" data-vf="split" aria-label="Split percent"><span class="muted">%</span></div>${i > 1 ? `<button class="btn ghost sm" type="button" data-rm="${i}" aria-label="Remove variant">${ICON.x.replace('<svg', '<svg width="12" height="12"')}</button>` : '<span></span>'}</div>`).join('')}</div>
+      <div class="row between" style="margin-top:8px"><span id="splitSum" class="muted" style="font-size:12.5px"></span><button class="btn ghost sm" type="button" id="evenSplit">Split evenly</button></div>
+    </div>
+  </div>`;
+  const upd = () => {
+    const daily = eligibleDaily() * wz.traffic / 100;
+    const days = daily ? Math.ceil(wz.users / daily) : Infinity;
+    $('#usersHint').innerHTML = wz.platforms.length && wz.geos.length ? `About ${fmtN(eligibleDaily())} eligible users a day. At ${wz.traffic}% you reach ${fmtN(wz.users)} users in about <b>${days} day${days === 1 ? '' : 's'}</b>.` : '<span class="err">Pick at least one platform and one country.</span>';
+    $('#trafV').textContent = wz.traffic + '%';
+    const sum = wz.variants.reduce((a, x) => a + (+x.split || 0), 0);
+    $('#splitSum').innerHTML = sum === 100 ? `Split adds up to 100%` : `<span class="err">Split adds up to ${sum}%. It must be 100%.</span>`;
+    const busy = exps.filter(e => e.layer === wz.layer && wz.layer !== 'None' && ['running', 'scheduled'].includes(e.status));
+    $('#layerHint').textContent = wz.layer === 'None' ? 'Users can be in other experiments at the same time.' : busy.length ? `Shares users with ${busy.length} live test${busy.length > 1 ? 's' : ''} in this layer; nobody will be in both.` : 'No live tests in this layer.';
+  };
+  bind(b, upd);
+  const multi = (id, key) => $(id).onchange = () => { wz[key] = $$(id + ' input:checked').map(i => i.value); persistDraft(); upd(); };
+  multi('#w_plat', 'platforms'); multi('#w_geo', 'geos');
+  $('#geoAll').onclick = () => { wz.geos = GEOS.map(g => g.id); persistDraft(); renderWizard(v); };
+  $('#geoNone').onclick = () => { wz.geos = []; persistDraft(); renderWizard(v); };
+  $('#vars').oninput = ev => { const el = ev.target; if (!el.dataset.vf) return; const vv = wz.variants[+el.dataset.vi]; vv[el.dataset.vf] = el.dataset.vf === 'split' ? +el.value : el.value; persistDraft(); upd(); };
+  $('#vars').onclick = ev => { const r = ev.target.closest('[data-rm]'); if (!r) return; wz.variants.splice(+r.dataset.rm, 1); even(); renderWizard(v); };
+  const even = () => { const n = wz.variants.length; wz.variants.forEach((x, i) => x.split = Math.floor(100 / n) + (i < 100 % n ? 1 : 0)); persistDraft(); };
+  $('#addVar').onclick = () => { wz.variants.push({ name: 'Variant ' + String.fromCharCode(65 + wz.variants.length), split: 0, desc: '' }); even(); renderWizard(v); };
+  $('#evenSplit').onclick = () => { even(); renderWizard(v); };
+  upd();
+}
+function stepMetrics(b, v) {
+  const sel = wz.metrics;
+  b.innerHTML = `<h2>Metrics</h2><p class="muted" style="margin:4px 0 16px">Pick one primary metric that decides success, plus any secondary and guardrail metrics. A guardrail is something that must not get worse.</p>
+  <div class="stack" style="gap:16px">
+    <div class="row">
+      <div class="ms-wrap"><button class="btn pri" type="button" id="msBtn" aria-haspopup="true">${ICON.plus} Add metrics ▾</button><div class="pop" id="msPop" hidden></div></div>
+      <button class="btn" type="button" id="msNew">Define a new metric</button>
+      <button class="btn" type="button" id="msAA"><span class="aa-logo" style="width:18px;height:18px;font-size:9px;border-radius:4px">Aa</span> ${adobe.connected ? 'Import from Adobe Analytics' : 'Connect Adobe Analytics'}</button>
+    </div>
+    <div><div class="eyebrow" style="margin-bottom:6px">Quick picks</div><div class="packs">${PACKS.map((p, i) => `<button class="btn sm" type="button" data-pack="${i}">${p.name} <span class="muted">+${p.ids.length}</span></button>`).join('')}</div></div>
+    <div class="card" style="padding:4px 16px;background:var(--bg)">${sel.length ? sel.map((m, i) => { const md = M(m.id); return `<div class="selm"><div style="min-width:0"><b>${esc(md.name)}</b> <span class="chip" style="font-size:11px;padding:1px 6px">${md.cat}</span> <span class="tag-src ${md.src === 'adobe' ? 'adobe' : md.src === 'custom' ? 'custom' : ''}">${md.src === 'adobe' ? 'Adobe' : md.src === 'custom' ? 'Custom' : 'Native'}</span><div class="mono muted" style="font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(md.formula)}</div></div>
+      <select data-role="${i}" aria-label="Role for ${esc(md.name)}">${['primary', 'secondary', 'guardrail'].map(r => `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r[0].toUpperCase() + r.slice(1)}</option>`).join('')}</select><button class="btn ghost sm" type="button" data-rmm="${i}" aria-label="Remove">${ICON.x.replace('<svg', '<svg width="12" height="12"')}</button></div>`; }).join('') : `<p class="muted" style="padding:20px 0;text-align:center">No metrics yet. Use Add metrics or a quick pick.</p>`}</div>
+  </div>`;
+  const addIds = ids => { ids.forEach(id => { if (!wz.metrics.some(m => m.id === id)) wz.metrics.push({ id, role: wz.metrics.some(m => m.role === 'primary') ? (M(id).cat === 'Performance' ? 'guardrail' : 'secondary') : 'primary' }); }); persistDraft(); renderWizard(v); };
+  $$('[data-pack]', b).forEach(x => x.onclick = () => addIds(PACKS[+x.dataset.pack].ids));
+  b.addEventListener('change', ev => { const s = ev.target.closest('[data-role]'); if (s) { wz.metrics[+s.dataset.role].role = s.value; persistDraft(); } });
+  b.addEventListener('click', ev => { const r = ev.target.closest('[data-rmm]'); if (r) { wz.metrics.splice(+r.dataset.rmm, 1); persistDraft(); renderWizard(v); } });
+  $('#msNew').onclick = () => openMetricBuilder(ids => addIds(ids));
+  $('#msAA').onclick = () => openAdobe(ids => addIds(ids));
+  const pop = $('#msPop');
+  let pick = new Set(), q = '';
+  const drawPop = () => {
+    const ql = q.toLowerCase();
+    pop.innerHTML = `<div class="ph"><input type="text" id="msQ" placeholder="Search metrics" value="${esc(q)}" aria-label="Search metrics"></div><div class="pb">${CATS.map(c => {
+      const ms = metrics.filter(m => m.cat === c && (!ql || m.name.toLowerCase().includes(ql) || m.formula.toLowerCase().includes(ql)));
+      if (!ms.length) return '';
+      return `<div class="grp"><span class="eyebrow">${c}</span><button class="btn ghost sm" type="button" data-all="${c}">Select all</button></div>` + ms.map(m => { const already = wz.metrics.some(x => x.id === m.id); return `<label class="opt"><input type="checkbox" value="${m.id}" ${already || pick.has(m.id) ? 'checked' : ''} ${already ? 'disabled' : ''}><span style="min-width:0">${esc(m.name)}<small>${esc(m.formula)}</small></span>${m.src === 'adobe' ? '<span class="tag-src adobe">Adobe</span>' : m.src === 'custom' ? '<span class="tag-src custom">Custom</span>' : '<span></span>'}</label>`; }).join('');
+    }).join('') || '<p class="muted" style="padding:12px">No metrics match.</p>'}</div><div class="pf"><span class="muted" style="font-size:12.5px">${pick.size} selected</span><div class="row" style="gap:6px"><button class="btn sm" type="button" id="msCancel">Cancel</button><button class="btn pri sm" type="button" id="msAdd" ${pick.size ? '' : 'disabled'}>Add ${pick.size || ''} metric${pick.size === 1 ? '' : 's'}</button></div></div>`;
+    const qi = $('#msQ'); qi.oninput = () => { q = qi.value; const pos = qi.selectionStart; drawPop(); const n = $('#msQ'); n.focus(); n.selectionStart = n.selectionEnd = pos; };
+  };
+  pop.onchange = ev => { const c = ev.target; if (c.type !== 'checkbox') return; c.checked ? pick.add(c.value) : pick.delete(c.value); drawPop(); };
+  pop.onclick = ev => {
+    const a = ev.target.closest('[data-all]'); if (a) { metrics.filter(m => m.cat === a.dataset.all && !wz.metrics.some(x => x.id === m.id)).forEach(m => pick.add(m.id)); drawPop(); return; }
+    if (ev.target.closest('#msCancel')) { pop.hidden = true; return; }
+    if (ev.target.closest('#msAdd')) { pop.hidden = true; addIds([...pick]); }
+  };
+  $('#msBtn').onclick = () => { pop.hidden = !pop.hidden; if (!pop.hidden) { pick = new Set(); q = ''; drawPop(); $('#msQ').focus(); } };
+  document.addEventListener('click', function off(ev) { if (!document.body.contains(pop)) return document.removeEventListener('click', off); if (!ev.target.closest('.ms-wrap')) pop.hidden = true; });
+}
+const TPLS = [['generic', 'Blank'], ['checkout', 'Cart & checkout'], ['search', 'Search results'], ['product', 'Product page'], ['home', 'Home page'], ['pricing', 'Pricing'], ['onboarding', 'Sign-up'], ['cards', 'Payment'], ['notif', 'Notifications'], ['chat', 'Help centre']];
+function stepDesign(b, v) {
+  const draftExp = { id: 'draft', tpl: wz.tpl, images: wz.images, notes: wz.notes, variants: wz.variants, name: wz.name };
+  b.innerHTML = `<h2>What changes</h2><p class="muted" style="margin:4px 0 16px">Show the current screen and the new one. Upload screenshots or start from a mock-up, then pin notes on the changes so anyone can follow the test.</p>
+  <div class="fgrid" style="margin-bottom:16px"><label class="f">Start from a mock-up<select id="w_tpl">${TPLS.map(([k, n]) => `<option value="${k}" ${wz.tpl === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+  <label class="f">Describe the change<input type="text" data-k="changeDesc" value="${esc(wz.changeDesc)}" placeholder="e.g. Heart icon added to each product card"></label></div>
+  <div class="screens" id="screens">${['before', 'after'].map(s => shotCol(draftExp, s)).join('')}</div>`;
+  bind(b);
+  $('#w_tpl').onchange = ev => { wz.tpl = ev.target.value; persistDraft(); renderWizard(v); };
+  det.id = 'draft'; det.adding = null; det.pending = null;
+  wireShots(draftExp, v);
+  // keep draft in sync with edits made through the shared pin/upload code
+  const sync = () => { wz.images = draftExp.images || {}; wz.notes = draftExp.notes; persistDraft(); };
+  $('#screens').addEventListener('submit', sync); $('#screens').addEventListener('change', () => setTimeout(sync, 300)); $('#screens').addEventListener('click', () => setTimeout(sync, 0));
+}
+function powerCalc() {
+  const prim = wz.metrics.find(m => m.role === 'primary');
+  const md = prim ? M(prim.id) : M('conv');
+  const za = Z.a[wz.alpha], zb = Z.b[wz.power], mde = wz.mde / 100;
+  const varF = wz.cuped ? .64 : 1;
+  let n;
+  if (md.type === 'rate') n = (za + zb) ** 2 * 2 * md.base * (1 - md.base) * varF / (md.base * mde) ** 2;
+  else n = (za + zb) ** 2 * 2 * md.sd ** 2 * varF / (md.base * mde) ** 2;
+  const arms = wz.variants.length, total = Math.ceil(n) * arms;
+  const daily = eligibleDaily() * wz.traffic / 100;
+  return { md, perArm: Math.ceil(n), total, daysNeeded: daily ? Math.ceil(total / daily) : Infinity, daily, planned: daysBetween(wz.start, wz.end) };
+}
+function stepSchedule(b) {
+  b.innerHTML = `<h2>Schedule and statistics</h2><p class="muted" style="margin:4px 0 16px">Pick dates, and check the test has enough users to detect the change you care about.</p>
+  <div class="stack" style="gap:20px">
+    <div class="fgrid"><label class="f">Start date<input type="date" data-k="start" id="w_start" value="${wz.start}"></label><label class="f">End date<input type="date" data-k="end" id="w_end" value="${wz.end}"></label></div>
+    <div><h3 style="margin-bottom:10px">Sample size calculator</h3>
+      <div class="fgrid" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+        <label class="f">Smallest change worth detecting<div class="row" style="gap:6px;flex-wrap:nowrap"><input type="number" data-k="mde" id="w_mde" min="0.5" max="50" step="0.5" value="${wz.mde}"><span class="muted">%</span></div></label>
+        <label class="f">Confidence<select data-k="alpha" id="w_alpha"><option value="0.1" ${wz.alpha === '0.1' ? 'selected' : ''}>90%</option><option value="0.05" ${wz.alpha === '0.05' ? 'selected' : ''}>95%</option><option value="0.01" ${wz.alpha === '0.01' ? 'selected' : ''}>99%</option></select></label>
+        <label class="f">Power<select data-k="power" id="w_power"><option value="0.8" ${wz.power === '0.8' ? 'selected' : ''}>80%</option><option value="0.9" ${wz.power === '0.9' ? 'selected' : ''}>90%</option></select></label>
+      </div>
+      <div class="calc" style="margin-top:12px" id="calc"></div>
+      <div id="calcNote" style="margin-top:10px"></div>
+    </div>
+    <div class="stack" style="gap:10px"><h3>Analysis options</h3>
+      <label class="toggle"><input type="checkbox" data-k="cuped" id="w_cuped" ${wz.cuped ? 'checked' : ''}> Use CUPED variance reduction (uses pre-experiment behaviour to reach significance with fewer users)</label>
+      <label class="toggle"><input type="checkbox" data-k="sequential" id="w_seq" ${wz.sequential ? 'checked' : ''}> Sequential testing (safe to check results daily without inflating false positives)</label>
+      <label class="toggle"><input type="checkbox" data-k="autostop" id="w_auto" ${wz.autostop ? 'checked' : ''}> Auto-stop and alert the owner if a guardrail is breached</label>
+    </div>
+  </div>`;
+  const upd = () => {
+    const P = powerCalc();
+    $('#calc').innerHTML = `<div><div class="k">Users needed per variant</div><div class="v">${fmtInt(P.perArm)}</div><div class="k">${esc(P.md.name)}, baseline ${fmtVal(P.md, P.md.base)}</div></div><div><div class="k">Total users needed</div><div class="v">${fmtInt(P.total)}</div><div class="k">${wz.variants.length} variants</div></div><div><div class="k">Days needed at ${wz.traffic}% traffic</div><div class="v">${isFinite(P.daysNeeded) ? P.daysNeeded : '—'}</div><div class="k">${P.planned} days planned</div></div>`;
+    const notes = [];
+    if (!wz.metrics.some(m => m.role === 'primary')) notes.push(['info', 'No primary metric chosen yet, so this uses checkout conversion as an example.']);
+    if (P.planned < 7) notes.push(['warn', 'Run for at least 7 days so every weekday is covered.']);
+    if (P.daysNeeded > P.planned) notes.push(['warn', `At this traffic the test needs ${P.daysNeeded} days but runs ${P.planned}. Extend the end date, raise traffic, or accept a larger detectable change.`]);
+    else notes.push(['ok', `Enough users to detect a ${wz.mde}% change in ${P.daysNeeded} days.`]);
+    if (wz.users < P.total) notes.push(['warn', `Your target of ${fmtInt(wz.users)} users is below the ${fmtInt(P.total)} needed.`]);
+    $('#calcNote').innerHTML = `<div class="stack" style="gap:6px">${notes.map(([k, t]) => `<div class="note ${k}">${k === 'ok' ? ICON.check : k === 'info' ? ICON.info : ICON.warn}<span>${esc(t)}</span></div>`).join('')}</div>`;
+  };
+  bind(b, upd); upd();
+}
+function stepErrors(i) {
+  const E = [];
+  if (i === 0) { if (!wz.name.trim()) E.push('Give the experiment a name.'); const f = fidError(wz.featureId); if (f) E.push(f); if (!wz.hypothesis.trim()) E.push('Write a hypothesis so others understand the goal.'); }
+  if (i === 1) { if (!wz.platforms.length) E.push('Pick at least one platform.'); if (!wz.geos.length) E.push('Pick at least one country.'); if (wz.variants.reduce((a, x) => a + (+x.split || 0), 0) !== 100) E.push('Variant split must add up to 100%.'); if (wz.variants.some(x => !x.name.trim())) E.push('Every variant needs a name.'); if (!(wz.users >= 1000)) E.push('Enrol at least 1,000 users.'); }
+  if (i === 2) { const p = wz.metrics.filter(m => m.role === 'primary').length; if (!wz.metrics.length) E.push('Add at least one metric.'); else if (p !== 1) E.push(p ? 'Choose only one primary metric. Make the others secondary.' : 'Mark one metric as primary.'); }
+  if (i === 4) { if (!wz.start || !wz.end) E.push('Choose start and end dates.'); else if (wz.end <= wz.start) E.push('End date must be after the start date.'); else if (wz.start < TODAY_ISO) E.push('Start date can’t be in the past.'); }
+  return E;
+}
+function stepReview(b, v) {
+  const P = powerCalc();
+  const all = [0, 1, 2, 4].flatMap(stepErrors);
+  b.innerHTML = `<h2>Review and launch</h2><p class="muted" style="margin:4px 0 16px">Check the setup. Launching sends it to ${esc(wz.reviewer)} for approval.</p>
+  ${all.length ? `<div class="stack" style="gap:6px;margin-bottom:16px">${all.map(x => `<div class="note bad">${ICON.warn}<span>${esc(x)}</span></div>`).join('')}</div>` : ''}
+  <div class="review"><dl>
+    <dt>Name</dt><dd><b>${esc(wz.name || '—')}</b> <span class="mono muted">${esc(wz.featureId)}</span></dd>
+    <dt>Owner</dt><dd>${esc(wz.owner)} · ${esc(wz.team)}</dd>
+    <dt>Hypothesis</dt><dd>${esc(wz.hypothesis || '—')}</dd>
+    <dt>Platforms</dt><dd>${wz.platforms.map(p => PLATFORMS.find(x => x.id === p).name).join(', ') || '—'}</dd>
+    <dt>Geography</dt><dd>${wz.geos.map(g => GEOS.find(x => x.id === g).name).join(', ') || '—'}</dd>
+    <dt>Users</dt><dd class="num">${fmtInt(wz.users)} at ${wz.traffic}% of traffic · ${esc(wz.targeting)}${wz.holdout ? ' · holdout excluded' : ''}</dd>
+    <dt>Variants</dt><dd>${wz.variants.map(x => `${esc(x.name)} ${x.split}%`).join(' · ')}</dd>
+    <dt>Metrics</dt><dd>${wz.metrics.map(m => `${esc(M(m.id).name)} <span class="role">${m.role}</span>`).join('<br>') || '—'}</dd>
+    <dt>Dates</dt><dd>${fmtDY(wz.start)} – ${fmtDY(wz.end)} (${P.planned} days; ${isFinite(P.daysNeeded) ? P.daysNeeded : '—'} needed)</dd>
+    <dt>Analysis</dt><dd>${[wz.cuped && 'CUPED', wz.sequential && 'Sequential testing', wz.autostop && 'Auto-stop on guardrail breach'].filter(Boolean).join(' · ') || 'Standard fixed-horizon test'}</dd>
+    <dt>Screens</dt><dd>${(wz.notes.before.length + wz.notes.after.length)} notes · ${Object.keys(wz.images || {}).length ? 'uploaded screenshots' : 'mock-up: ' + (TPLS.find(t => t[0] === wz.tpl) || [, 'Blank'])[1]}</dd>
+    <dt>Approver</dt><dd><select id="w_rev" style="width:auto">${['Experiment Review board', 'Team lead', 'Data science on-call'].map(r => `<option ${wz.reviewer === r ? 'selected' : ''}>${r}</option>`).join('')}</select></dd>
+  </dl></div>
+  <div class="row between" style="margin-top:20px;border-top:1px solid var(--line);padding-top:16px"><button class="btn" type="button" id="wzBack">Back</button><div class="row"><button class="btn" type="button" id="wzDraft">Save as draft</button><button class="btn pri" type="button" id="wzLaunch" ${all.length ? 'disabled' : ''}>Submit and schedule</button></div></div>`;
+  $('#w_rev').onchange = ev => { wz.reviewer = ev.target.value; persistDraft(); };
+  $('#wzBack').onclick = () => { wz.step--; persistDraft(); renderWizard(v); };
+  const create = status => {
+    const id = 'x' + Date.now().toString(36);
+    const effR = rng(hash(id));
+    const e = { id, name: wz.name || 'Untitled experiment', featureId: wz.featureId || slugify(wz.name || id), team: wz.team, owner: wz.owner, status, start: wz.start, end: wz.end, platforms: wz.platforms, geos: wz.geos, users: wz.users, traffic: wz.traffic, layer: wz.layer, targeting: wz.targeting, holdout: wz.holdout,
+      tpl: wz.tpl, images: wz.images, notes: wz.notes, hypothesis: wz.hypothesis, variants: wz.variants.map(x => ({ ...x })), metrics: wz.metrics.map(m => ({ ...m, eff: (effR() - .4) * .06 })), cuped: wz.cuped, sequential: wz.sequential, autostop: wz.autostop, comments: wz.changeDesc ? [{ who: wz.owner, when: TODAY_ISO, text: 'Change: ' + wz.changeDesc }] : [],
+      log: [{ when: TODAY_ISO, text: `${wz.owner} created the experiment` }] };
+    if (status === 'scheduled') e.log.push({ when: TODAY_ISO, text: `Sent to ${wz.reviewer} for approval` });
+    exps.unshift(e); save(); wz = null; try { localStorage.removeItem('splitlab.draft'); } catch (err) { }
+    toast(status === 'draft' ? 'Saved as draft' : 'Submitted. It will start on ' + fmtD(e.start)); go('exp-' + id);
+  };
+  $('#wzDraft').onclick = () => create('draft');
+  $('#wzLaunch').onclick = () => create('scheduled');
+}
+
+/* ---------- feature guide ---------- */
+function renderGuide(v) {
+  const F = [
+    ['Sample size calculator', 'Tells you how many users and days you need before launch, so tests are not stopped too early.', 'Optimizely, Statsig, GrowthBook', 'new'],
+    ['Automatic verdict and summary', 'Each test ends with Success, Failure or Flat, a plain-language summary and a recommendation.', 'Statsig, Eppo', 'exp-onetap'],
+    ['Guardrail metrics', 'Metrics that must not get worse. A breach turns a winning test into a failure.', 'Statsig, Eppo, Optimizely', 'exp-annual'],
+    ['Sample ratio mismatch check', 'Flags when users were not split as planned, which usually means a bug in assignment.', 'Eppo, Statsig, GrowthBook', 'exp-banner'],
+    ['CUPED variance reduction', 'Uses behaviour from before the test to reach a result with fewer users.', 'Statsig, Eppo, GrowthBook', 'new'],
+    ['Sequential testing', 'Makes it safe to look at results every day without inflating false positives.', 'Optimizely, Eppo, GrowthBook', 'exp-onboard'],
+    ['Mutual exclusion layers', 'Keeps people out of two tests on the same screen so results do not interfere.', 'Optimizely, Statsig', 'new'],
+    ['Global holdout', 'A small group that never sees new features, to measure the combined effect of all launches.', 'Statsig, Eppo', 'new'],
+    ['Feature flags and rollout', 'The feature ID doubles as a flag. Winners roll out to 100% with one click.', 'LaunchDarkly, GrowthBook, Statsig', 'exp-freeship'],
+    ['Targeting rules', 'Limit a test to new users, logged-in users or a minimum app version.', 'LaunchDarkly, Optimizely', 'new'],
+    ['Multi-variant tests', 'Compare several treatments against one control.', 'Most platforms', 'exp-banner'],
+    ['Segment breakdown', 'See whether the effect differs by platform or country.', 'Amplitude Experiment, Eppo', 'exp-sticky'],
+    ['Shared metrics library', 'One definition per metric with a formula, reused across every test.', 'Eppo, GrowthBook', 'metrics'],
+    ['Adobe Analytics metrics', 'Import calculated metrics from an Adobe report suite.', 'Adobe Target', 'metrics'],
+    ['Annotated before and after screens', 'Pins and notes explain exactly what changed, for anyone reading later.', 'Optimizely visual editor', 'exp-reviews'],
+    ['Org-wide timeline', 'See every test on one calendar to spot overlaps and plan launches.', 'Optimizely, Statsig', 'dashboard'],
+    ['Approval workflow', 'Tests go to a reviewer before they launch.', 'Optimizely, Eppo', 'new'],
+    ['Export and share', 'Report, CSV, config or a summary ready for Slack or email.', 'Most platforms', 'exp-onetap'],
+    ['Comments and activity log', 'Discussion and a history of every change, kept with the experiment.', 'Statsig, Eppo', 'exp-digest'],
+    ['Stop with a reason', 'End a test early, choose where traffic goes and record why.', 'Most platforms', 'exp-cards']
+  ];
+  v.innerHTML = `<div class="stack" style="gap:20px"><div><div class="eyebrow">About this prototype</div><h1>Feature guide</h1><p class="muted" style="margin-top:4px;max-width:72ch">What is in Splitlab, including features common in other experimentation tools. Each card links to a place in the prototype where you can try it.</p></div>
+  <div class="feat">${F.map(([n, d, s, h]) => `<div class="card"><h3>${n}</h3><p class="ink2" style="font-size:13px">${d}</p><p class="seen">Also found in: ${s}</p><a class="where" href="#${h}">See it →</a></div>`).join('')}</div>
+  <div class="card"><h2 style="margin-bottom:8px">Not in this prototype yet</h2><ul class="ink2" style="margin:0;padding-left:18px;line-height:1.8">
+    <li>A real connection to Adobe Analytics and to the app's assignment SDK. Both are simulated with sample data here.</li>
+    <li>Bayesian analysis ("chance to beat control") as an alternative to p-values.</li>
+    <li>Automatic traffic ramp-up schedules (for example 5% → 25% → 50%).</li>
+    <li>Slack and email alerts when a guardrail is breached or a test ends.</li>
+    <li>Sign-in, roles and permissions. In this prototype, changes are saved in your browser only.</li>
+  </ul></div></div>`;
+}
+
+let rsz; window.addEventListener('resize', () => { clearTimeout(rsz); rsz = setTimeout(() => { if (route.startsWith('exp-') && $('#chart')) { const e = exps.find(x => x.id === route.slice(4)); const R = e && compute(e); if (R) drawChart(e, R); } }, 150); });
+render();
+</script>
